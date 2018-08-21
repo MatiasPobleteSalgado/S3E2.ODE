@@ -1,9 +1,8 @@
 import threading as th
-
-from sys import argv
-import time
 import pygame as pgm
 import random as rnd
+from sys import argv
+import time
 
 class Color(object):
 	white = (255, 255, 255)
@@ -17,6 +16,7 @@ class HeatSource(pgm.rect.Rect):
 	n = None
 	def __init__(self, pos = (0, 0), dim = (1, 1), temp = 0, num = 0):
 		pgm.rect.Rect.__init__(self, pos, dim)
+		self.source = False
 		self.num = num
 		self.on  = True
 		self.pos = pos
@@ -25,72 +25,73 @@ class HeatSource(pgm.rect.Rect):
 		self.neighbors = []
 		self.clock = pgm.time.Clock()
 		self.updateThread = th.Thread(target = self.__update)
+	
+	def __str__(self):
+		return str(self.num) + " " + str(self.temp)
 
 	def __update(self):
 		while(self.on):
-			self.clock.tick(100)
-			dTime = 1
-			if(self.num < HeatSource.n[0] + 1):
-				if(self.num == 1):
+			self.clock.tick(60)
+			if(not self.source):
+				dTime = 10
+				if(self.num < HeatSource.n[0] + 1):
+					if(self.num == 1):
+						right  = HeatSource.s2[self.num - 1 + 1].temp
+						bottom = HeatSource.s2[self.num - 1 + HeatSource.n[0]].temp
+						dTemp  = (right - self.temp) / self.width ** 2 + (-self.temp + bottom) / self.height ** 2
+						self.temp = self.temp + dTemp * dTime 
+						continue
+					if(self.num == HeatSource.n[0]):
+						left   = HeatSource.s2[self.num - 1 - 1].temp
+						bottom = HeatSource.s2[self.num - 1 + HeatSource.n[0]].temp
+						dTemp = (-self.temp + left) / self.width ** 2 + (-self.temp + bottom) / self.height ** 2
+						self.temp = self.temp + dTemp * dTime 
+						continue
 					right  = HeatSource.s2[self.num - 1 + 1].temp
-					bottom = HeatSource.s2[self.num - 1 + HeatSource.n[0]].temp
-					dTemp  = (right - self.temp) / self.width ** 2 + (-self.temp + bottom) / self.height ** 2
-					self.temp = self.temp + dTemp * dTime 
-					break
-				if(self.num == HeatSource.n[0]):
 					left   = HeatSource.s2[self.num - 1 - 1].temp
 					bottom = HeatSource.s2[self.num - 1 + HeatSource.n[0]].temp
-					dTemp = (-self.temp + left) / self.width ** 2 + (-self.temp + bottom) / self.height ** 2
+					dTemp  = (right - 2 * self.temp + left) / self.width ** 2 + (-self.temp + bottom) / self.height ** 2
 					self.temp = self.temp + dTemp * dTime 
-					break
-				right  = HeatSource.s2[self.num - 1 + 1].temp
-				left   = HeatSource.s2[self.num - 1 - 1].temp
-				bottom = HeatSource.s2[self.num - 1 + HeatSource.n[0]].temp
-				dTemp  = (right - 2 * self.temp + left) / self.width ** 2 + (-self.temp + bottom) / self.height ** 2
-				self.temp = self.temp + dTemp * dTime 
-				break
-			if(self.num > (HeatSource.n[1] * HeatSource.n[0] - HeatSource.n[0])):
-				if(self.num == (HeatSource.n[1] * HeatSource.n[0] - HeatSource.n[0] + 1)):
-					right  = HeatSource.s2[self.num - 1 + 1].temp
-					top    = HeatSource.s2[self.num - 1 - HeatSource.n[0]].temp
-					dTemp = (right - self.temp) / self.width ** 2 + (top - self.temp) / self.height ** 2
-					self.temp = self.temp + dTemp * dTime 
-					break
-				if(self.num == (HeatSource.n[1] * HeatSource.n[0])):
+					continue
+				if(self.num > (HeatSource.n[1] * HeatSource.n[0] - HeatSource.n[0])):
+					if(self.num == (HeatSource.n[1] * HeatSource.n[0] - HeatSource.n[0] + 1)):
+						right  = HeatSource.s2[self.num - 1 + 1].temp
+						top    = HeatSource.s2[self.num - 1 - HeatSource.n[0]].temp
+						dTemp = (right - self.temp) / self.width ** 2 + (top - self.temp) / self.height ** 2
+						self.temp = self.temp + dTemp * dTime 
+						continue
+					if(self.num == (HeatSource.n[1] * HeatSource.n[0])):
+						top    = HeatSource.s2[self.num - 1 - HeatSource.n[0]].temp
+						left   = HeatSource.s2[self.num - 1 - 1].temp
+						dTemp = (-self.temp + left) / self.width ** 2 + (top - self.temp) / self.height ** 2
+						self.temp = self.temp + dTemp * dTime 
+						continue
 					top    = HeatSource.s2[self.num - 1 - HeatSource.n[0]].temp
 					left   = HeatSource.s2[self.num - 1 - 1].temp
-					dTemp = (-self.temp + left) / self.width ** 2 + (top - self.temp) / self.height ** 2
+					right  = HeatSource.s2[self.num - 1 + 1].temp
+					dTemp = (right - 2 * self.temp + left) / self.width ** 2 + (top - self.temp) / self.height ** 2
 					self.temp = self.temp + dTemp * dTime 
-					break
-
-				top    = HeatSource.s2[self.num - 1 - HeatSource.n[0]].temp
-				left   = HeatSource.s2[self.num - 1 - 1].temp
+					continue
+				if(self.num % HeatSource.n[0] == 1):
+					top    = HeatSource.s2[self.num - 1 - HeatSource.n[0]].temp
+					right  = HeatSource.s2[self.num - 1 + 1].temp
+					bottom = HeatSource.s2[self.num - 1 + HeatSource.n[0]].temp
+					dTemp = (right - self.temp) / self.width ** 2 + (top - 2 * self.temp + bottom) / self.height ** 2
+					self.temp = self.temp + dTemp * dTime 
+					continue
+				if(self.num % HeatSource.n[0] == 0):
+					left   = HeatSource.s2[self.num - 1 - 1].temp
+					top    = HeatSource.s2[self.num - 1 - HeatSource.n[0]].temp
+					bottom = HeatSource.s2[self.num - 1 + HeatSource.n[0]].temp
+					dTemp = (-self.temp + left) / self.width ** 2 + (top - 2 * self.temp + bottom) / self.height ** 2
+					self.temp = self.temp + dTemp * dTime 
+					continue
 				right  = HeatSource.s2[self.num - 1 + 1].temp
-				dTemp = (right - 2 * self.temp + left) / self.width ** 2 + (top - self.temp) / self.height ** 2
-				self.temp = self.temp + dTemp * dTime 
-				break
-			if(self.num % HeatSource.n[0] == 1):
-				top    = HeatSource.s2[self.num - 1 - HeatSource.n[0]].temp
-				right  = HeatSource.s2[self.num - 1 + 1].temp
-				bottom = HeatSource.s2[self.num - 1 + HeatSource.n[0]].temp
-				dTemp = (right - self.temp) / self.width ** 2 + (top - 2 * self.temp + bottom) / self.height ** 2
-				self.temp = self.temp + dTemp * dTime 
-				break
-			
-			if(self.num % HeatSource.n[0] == 0):
 				left   = HeatSource.s2[self.num - 1 - 1].temp
 				top    = HeatSource.s2[self.num - 1 - HeatSource.n[0]].temp
 				bottom = HeatSource.s2[self.num - 1 + HeatSource.n[0]].temp
-				dTemp = (-self.temp + left) / self.width ** 2 + (top - 2 * self.temp + bottom) / self.height ** 2
+				dTemp = (right - 2 * self.temp + left) / self.width ** 2 + (top - 2 * self.temp + bottom) / self.height ** 2
 				self.temp = self.temp + dTemp * dTime 
-				break
-
-			right  = HeatSource.s2[self.num - 1 + 1].temp
-			left   = HeatSource.s2[self.num - 1 - 1].temp
-			top    = HeatSource.s2[self.num - 1 - HeatSource.n[0]].temp
-			bottom = HeatSource.s2[self.num - 1 + HeatSource.n[0]].temp
-			dTemp = (right - 2 * self.temp + left) / self.width ** 2 + (top - 2 * self.temp + bottom) / self.height ** 2
-			self.temp = self.temp + dTemp * dTime 
 
 	def start(self):
 		self.updateThread.start()
@@ -115,7 +116,7 @@ class Main(object):
 		dim = (5, 2)
 		nX, nY = (50, 20)
 		HeatSource.n = nX, nY
-		scale = 200
+		scale = 250
 		num = 1
 		for y in range(nY):
 			arr = []
@@ -133,6 +134,10 @@ class Main(object):
 				num += 1
 			HeatSource.sources.append(arr)
 		
+		
+		HeatSource.s2[100].temp   = 1000
+		HeatSource.s2[100].source = True
+
 		for i in range(len(HeatSource.sources) - 1):
 			for j in range(len(HeatSource.sources[i]) - 1):
 				HeatSource.sources[i][j].neighbors.append(HeatSource.sources[i + 1][j])
@@ -176,7 +181,7 @@ class Main(object):
 				for h in heatGen:
 					if(h.collidepoint(pgm.mouse.get_pos())):
 						pgm.display.set_caption(str(h.num))
-						h.getHeat(1, frameTime)
+						h.getHeat(10, frameTime)
 						for n in h.neighbors:
 							n.draw(scr, True)
 
