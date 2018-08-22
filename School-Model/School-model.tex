@@ -1,0 +1,68 @@
+\documentclass[12pt,a4paper]{article}
+
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman]{babel}
+\usepackage{verbatim}
+
+\usepackage[pdftex]{graphicx}
+\usepackage{latexsym}
+\usepackage{amsmath,amssymb,amsthm}
+
+\newcommand{\ita}[1]{\textit{#1}}
+\newcommand{\bol}[1]{\textbf{#1}}
+
+\title{Diffusion Cross-Diffusion equations to model student distribution in a three type school system}
+
+\begin{document}
+\maketitle
+
+\section{Model}
+
+\subsection{equations}
+Let $u_{1}$ be the \ita{density of privileged students}, while $u_{2}$ denotes the \ita{density of non-privileged students}. 
+
+In this model three type of schools are considered: private-, public-, and a-third-kind-of schools. To model the long-term student-school distribution the schools are thought to have 'attracting fields', which spread over the domain and attract the two types of students. The variable $v_{ij}$ correspond to the signal sent out by school type $j \in \{1,2,3\}$ to attract students of type $i \in \{1,2\}$. Here $j=1,2,3$ correspond to private-, public, and the third-kind-of school respectively. 
+
+In model 1 a diffusion cross-diffusion equation is used for the $u_{i}$ while the $v_{ij}$ spread due a diffusion equation:
+\begin{align}
+\frac{\partial u_{i}}{\partial t} &= c_{i} \Delta u_{i} - c_{i1} \Delta v_{i1} - c_{i2} \Delta v_{i2} - c_{i3} \Delta v_{i3} \label{eq:model_1_1} \\
+\frac{\partial v_{ij}}{\partial t} &= \tilde{c}_{ij} \Delta v_{ij} + g \left(u_{1},u_{2},u_{3} \right). \label{eq:model_1_2}
+\end{align}
+
+In model 2 the attracting fields are described by a Laplace-equation
+\begin{align}
+- \Delta v_{ij} = g \left(u_{1},u_{2},u_{3} \right). \label{eq:model_2_1}
+\end{align}
+
+
+\section{Numerical Approximation}
+
+\subsection{explicit scheme using multiple threads}
+The equations in both models are discretized using a finite-difference approach. \bol{Using a finite Volume approach results in the same method, but is more natural when using this type of equations. It also allows grid refinement and non-quadratic grid-cells; I will try to explain it to you in the upcoming days. It uses a little bit more advanced mathematics but results in (almost) the same numerical method.}
+
+Using
+\begin{align*}
+\Delta v_{ij} (t,x,y) & \approx \frac{v_{ij}(t,x+\Delta x,y) - 2 v_{ij}(t,x,y) + v_{ij}(t,x - \Delta x,y)}{(\Delta x)^{2}} \\
+&\ + \frac{v_{ij}(t,x,y +\Delta y) - 2 v_{ij}(t,x,y) + v_{ij}(t,x,y - \Delta y)}{(\Delta y)^{2}}
+\end{align*}
+in equation \eqref{eq:model_1_2} yields
+\begin{align*}
+\frac{\partial v_{ij}}{\partial t} (t,x,y) & \approx \frac{v_{ij}(t,x+\Delta x,y) - 2 v_{ij}(t,x,y) + v_{ij}(t,x - \Delta x,y)}{(\Delta x)^{2}} \\
+&\ + \frac{v_{ij}(t,x,y +\Delta y) - 2 v_{ij}(t,x,y) + v_{ij}(t,x,y - \Delta y)}{(\Delta y)^{2}}.
+\end{align*}
+Using an explicit euler method in time brings us to the scheme
+\begin{align*}
+\frac{u_{i}(t+ \Delta t,x,y)-u_{i}(t,x,y)}{\Delta t} & \approx \frac{v_{ij}(t,x+\Delta x,y) - 2 v_{ij}(t,x,y) + v_{ij}(t,x - \Delta x,y)}{(\Delta x)^{2}} \\
+&\ + \frac{v_{ij}(t,x,y +\Delta y) - 2 v_{ij}(t,x,y) + v_{ij}(t,x,y - \Delta y)}{(\Delta y)^{2}}.
+\end{align*}
+
+\section{Stefan's remarks}
+Here are a few remarks Stefan gave me today:
+\begin{enumerate}
+\item He suggested to use a grid refinement where the estimated error is high.
+\item Using multiple threads we should control the synchronization between the threads and compare the results using different synchronization-rates, e.g. synchronize after every time-step, after every $n$ time steps, don't synchronize.
+\end{enumerate}
+
+\end{document}
