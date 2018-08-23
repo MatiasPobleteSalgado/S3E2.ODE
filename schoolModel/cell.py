@@ -1,10 +1,12 @@
 import threading as th
 import pygame as pgm
+from multiprocessing import Process
 
-class HeatSource(pgm.rect.Rect):
+class Cell(pgm.rect.Rect):
 	#- Rect(x, y, width, height)
-	sources = []
+	cells = []
 	n = None
+	timeStep = 0
 	def __init__(self, pos = (0, 0), dim = (1, 1), temp = 0, num = 0):
 		pgm.rect.Rect.__init__(self, pos, dim)
 		self.source = False
@@ -20,54 +22,54 @@ class HeatSource(pgm.rect.Rect):
 		return str(self.num) + " " + str(self.temp)
 
 	def getDTemp(self):
-		if(self.num < HeatSource.n[0] + 1):
+		if(self.num < Cell.n[0] + 1):
 			if(self.num == 1):
-				right  = HeatSource.sources[self.num - 1 + 1].temp
-				bottom = HeatSource.sources[self.num - 1 + HeatSource.n[0]].temp
+				right  = Cell.cells[self.num - 1 + 1].temp
+				bottom = Cell.cells[self.num - 1 + Cell.n[0]].temp
 				dTemp  = (right - self.temp) / self.width ** 2 + (-self.temp + bottom) / self.height ** 2
 				return dTemp
-			if(self.num == HeatSource.n[0]):
-				left   = HeatSource.sources[self.num - 1 - 1].temp
-				bottom = HeatSource.sources[self.num - 1 + HeatSource.n[0]].temp
+			if(self.num == Cell.n[0]):
+				left   = Cell.cells[self.num - 1 - 1].temp
+				bottom = Cell.cells[self.num - 1 + Cell.n[0]].temp
 				dTemp = (-self.temp + left) / self.width ** 2 + (-self.temp + bottom) / self.height ** 2
 				return dTemp
-			right  = HeatSource.sources[self.num - 1 + 1].temp
-			left   = HeatSource.sources[self.num - 1 - 1].temp
-			bottom = HeatSource.sources[self.num - 1 + HeatSource.n[0]].temp
+			right  = Cell.cells[self.num - 1 + 1].temp
+			left   = Cell.cells[self.num - 1 - 1].temp
+			bottom = Cell.cells[self.num - 1 + Cell.n[0]].temp
 			dTemp  = (right - 2 * self.temp + left) / self.width ** 2 + (-self.temp + bottom) / self.height ** 2
 			return dTemp
-		if(self.num > (HeatSource.n[1] * HeatSource.n[0] - HeatSource.n[0])):
-			if(self.num == (HeatSource.n[1] * HeatSource.n[0] - HeatSource.n[0] + 1)):
-				right  = HeatSource.sources[self.num - 1 + 1].temp
-				top    = HeatSource.sources[self.num - 1 - HeatSource.n[0]].temp
+		if(self.num > (Cell.n[1] * Cell.n[0] - Cell.n[0])):
+			if(self.num == (Cell.n[1] * Cell.n[0] - Cell.n[0] + 1)):
+				right  = Cell.cells[self.num - 1 + 1].temp
+				top    = Cell.cells[self.num - 1 - Cell.n[0]].temp
 				dTemp = (right - self.temp) / self.width ** 2 + (top - self.temp) / self.height ** 2
 				return dTemp
-			if(self.num == (HeatSource.n[1] * HeatSource.n[0])):
-				top    = HeatSource.sources[self.num - 1 - HeatSource.n[0]].temp
-				left   = HeatSource.sources[self.num - 1 - 1].temp
+			if(self.num == (Cell.n[1] * Cell.n[0])):
+				top    = Cell.cells[self.num - 1 - Cell.n[0]].temp
+				left   = Cell.cells[self.num - 1 - 1].temp
 				dTemp = (-self.temp + left) / self.width ** 2 + (top - self.temp) / self.height ** 2
 				return dTemp
-			top    = HeatSource.sources[self.num - 1 - HeatSource.n[0]].temp
-			left   = HeatSource.sources[self.num - 1 - 1].temp
-			right  = HeatSource.sources[self.num - 1 + 1].temp
+			top    = Cell.cells[self.num - 1 - Cell.n[0]].temp
+			left   = Cell.cells[self.num - 1 - 1].temp
+			right  = Cell.cells[self.num - 1 + 1].temp
 			dTemp = (right - 2 * self.temp + left) / self.width ** 2 + (top - self.temp) / self.height ** 2
 			return dTemp
-		if(self.num % HeatSource.n[0] == 1):
-			top    = HeatSource.sources[self.num - 1 - HeatSource.n[0]].temp
-			right  = HeatSource.sources[self.num - 1 + 1].temp
-			bottom = HeatSource.sources[self.num - 1 + HeatSource.n[0]].temp
+		if(self.num % Cell.n[0] == 1):
+			top    = Cell.cells[self.num - 1 - Cell.n[0]].temp
+			right  = Cell.cells[self.num - 1 + 1].temp
+			bottom = Cell.cells[self.num - 1 + Cell.n[0]].temp
 			dTemp = (right - self.temp) / self.width ** 2 + (top - 2 * self.temp + bottom) / self.height ** 2
 			return dTemp
-		if(self.num % HeatSource.n[0] == 0):
-			left   = HeatSource.sources[self.num - 1 - 1].temp
-			top    = HeatSource.sources[self.num - 1 - HeatSource.n[0]].temp
-			bottom = HeatSource.sources[self.num - 1 + HeatSource.n[0]].temp
+		if(self.num % Cell.n[0] == 0):
+			left   = Cell.cells[self.num - 1 - 1].temp
+			top    = Cell.cells[self.num - 1 - Cell.n[0]].temp
+			bottom = Cell.cells[self.num - 1 + Cell.n[0]].temp
 			dTemp = (-self.temp + left) / self.width ** 2 + (top - 2 * self.temp + bottom) / self.height ** 2
 			return dTemp
-		right  = HeatSource.sources[self.num - 1 + 1].temp
-		left   = HeatSource.sources[self.num - 1 - 1].temp
-		top    = HeatSource.sources[self.num - 1 - HeatSource.n[0]].temp
-		bottom = HeatSource.sources[self.num - 1 + HeatSource.n[0]].temp
+		right  = Cell.cells[self.num - 1 + 1].temp
+		left   = Cell.cells[self.num - 1 - 1].temp
+		top    = Cell.cells[self.num - 1 - Cell.n[0]].temp
+		bottom = Cell.cells[self.num - 1 + Cell.n[0]].temp
 		dTemp = (right - 2 * self.temp + left) / self.width ** 2 + (top - 2 * self.temp + bottom) / self.height ** 2
 		return dTemp
 
