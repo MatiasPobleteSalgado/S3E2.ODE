@@ -3,13 +3,12 @@
 #include <math.h>
 #include <stdlib.h>
 
-__global__ void updateGrid(SDL_Rect * cells, float *temps, int nX, int nY, float dTime){
+__global__ void updateGrid(SDL_Rect * cells, float *temps, int nX, int nY, float dTime, float *schools){
 	//printf("%d\n", cells[threadIdx.x]);
-    int num = blockIdx.x *blockDim.x + threadIdx.x;;
+    int num = blockIdx.x * blockDim.x + threadIdx.x;;
     float right, bottom, left, top, temp = temps[num], dTemp;
     int width = cells[num].w, height = cells[num].h;
 
-    printf("%d\n", num);
     if(num < nX){
         if(num == 0){
             right  = temps[num + 1];
@@ -83,7 +82,7 @@ int main (int argc, char** argv){
 	// Model definition
     double dimX = 32, dimY = 32;
     int nX = 128, nY = 128, cellIndx = 0, scale = 32;
-    SDL_Rect *cells; 
+    SDL_Rect *cells;
     float *temperatures;
     cudaMallocManaged(&cells, nX * nY * sizeof(SDL_Rect));
     cudaMallocManaged(&temperatures, nX * nY * sizeof(float));

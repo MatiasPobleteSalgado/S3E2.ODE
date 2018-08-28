@@ -3,7 +3,7 @@ import pygame as pgm
 from sys import argv
 from schoolModel.cell import Cell
 from schoolModel.school import School
-from schoolModel.school import SchoolType
+from schoolModel.cell import SchoolType
 from schoolModel.student import Student
 from schoolModel.student import StudentType
 import time
@@ -27,11 +27,17 @@ class Main(object):
 					((dim[0] / nX) * x * scale, (dim[1] / nY) * y * scale), 
 					(dim[0] / nX * scale, dim[1] / nY * scale), 
 					0,
+					0,
 					num
 				)
 				Cell.cells.append(hs)
 				num += 1
-		Cell.cells[100] = School(100, 30, (Cell.cells[100].left, Cell.cells[100].top), SchoolType.private, 101)
+		Cell.cells[123] = School(460, 30, (Cell.cells[123].left, Cell.cells[123].top), SchoolType.private, 124)
+		Cell.cells[124] = School(480, 30, (Cell.cells[124].left, Cell.cells[124].top), SchoolType.private, 125)
+		Cell.cells[125] = School(500, 30, (Cell.cells[125].left, Cell.cells[125].top), SchoolType.private, 126)
+		Cell.cells[525] = Student((500, 200), StudentType.vulnerable, 526)
+		Cell.currentSchool = Cell.cells[123].type 
+		Cell.currentStudentType = Cell.cells[525].type
 		#Cell.cells[256] = School(100, 30, (Cell.cells[256].left, Cell.cells[256].top), SchoolType.private, 257)
 		#Cell.cells[500] = School(100, 30, (Cell.cells[500].left, Cell.cells[500].top), SchoolType.private, 501)
 		on = True
@@ -41,7 +47,8 @@ class Main(object):
 			cell.start()
 		while(on):
 			scr.fill(Color.white)
-			frameTime = fps.tick(60)
+			frameTime = fps.tick(30)
+			pgm.display.set_caption(str(Cell.cells[525].v) + ", " + str(Cell.cells[525].u))
 			for e in pgm.event.get():
 				if(e.type == pgm.QUIT):
 					on = False
@@ -51,8 +58,8 @@ class Main(object):
 			for cell in Cell.cells:
 				cell.draw(scr)
 				"""
-				if(Cell.collidepoint(pgm.mouse.get_pos())):
-					Cell.getHeat(10, frameTime)
+				if(cell.collidepoint(pgm.mouse.get_pos())):
+					cell.getHeat(1, frameTime)
 				"""
 			pgm.display.update()
 			

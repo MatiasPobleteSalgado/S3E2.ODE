@@ -1,9 +1,6 @@
 from schoolModel.cell import Cell
+from schoolModel.cell import SchoolType
 import threading as th
-
-class SchoolType(object):
-	municipal = 0
-	private = 2
 
 class School(Cell):
 	def __init__(self, capacity, numStudents, position, typeSchool, num = 0):
@@ -12,18 +9,17 @@ class School(Cell):
 		self.position = position
 		self.numStudents = numStudents
 		self.type = typeSchool
-		Cell.__init__(self, self.position, (20, 20), 700, num)
+		Cell.__init__(self, self.position, (20, 20), 700, 0, num)
 		self.updateThread = th.Thread(target = self.__update)
 		#self.source = True
 
 	def g(self, x, y):
-		if(self.num == 101):
-			return 100
+		if((self.num == 124) or (self.num == 125) or (self.num == 126)):
+			return 70000
 		return 0
 
 	def __update(self):
-		dTime = 10
 		while (self.on):
-			self.clock.tick(60)
-			self.temp = dTime * self.getDTemp() + dTime * self.g(self.left, self.top)
+			self.clock.tick(Cell.threadPause)
+			self.v = Cell.dTime * (self.getDV() + self.g(self.left, self.top))
 
