@@ -20,10 +20,41 @@
 
 \section{Model}
 
+\subsection{Basic features}
+\ita{This subsection is designed to collect all of the features we expect from our model. When we have all of them together we can think about how to include them in our equations}
+
+The aim of this model is to study long-term behaviour of a school-student system. It consists of two types of students (privileged and non-privileged) and three types of schools (private-, municipal-, and subsidized schools). We assume each type of school is sending out two 'signals', one for the privileged and one for the non-privileged students. The students are following these signals and thereby 'choosing' one type of school. 
+ 
+Two different concept are compared: 
+\begin{enumerate}
+\item Each school has one favourable type of student and does not care about segregation.
+\item Each school has one favourable type of student but at the same time also wants to minimize the total amount of segregation. 
+\end{enumerate}
+
+
+The signals of attraction by the schools should depend on:
+\begin{enumerate}
+\item The interest of this school in the type of student, i.e. if the school prefers privileged students the corresponding signal will be stronger.
+\item The total amount of students and the capacity of school. 
+\item The overall segregation index.
+\end{enumerate}
+
+\bol{Details to 2.):} As the total amount of students in one school converges to its total capacity the signal of the school should decrease. But at the same time the students that already are in the school should not leave to different schools. 
+
+The students on the other hand also have one prefered type of school, while the distance between their houses and schools should be kept small.
+
+In the long term behaviour every student should be able to choose one school, i.e. there are no students periodically moving between schools. 
+
+
+
+
+
+
+
 \subsection{equations}
 Let $u_{1}$ be the \ita{density of privileged students}, while $u_{2}$ denotes the \ita{density of non-privileged students}. 
 
-In this model three type of schools are considered: private-, public-, and a-third-kind-of schools. To model the long-term student-school distribution the schools are thought to have 'attracting fields', which spread over the domain and attract the two types of students. The variable $v_{ij}$ correspond to the signal sent out by school type $j \in \{1,2,3\}$ to attract students of type $i \in \{1,2\}$. Here $j=1,2,3$ correspond to private-, public, and the third-kind-of school respectively. 
+In this model three type of schools are considered: private-, municipal-, and subsidized schools. To model the long-term student-school distribution the schools are thought to have 'attracting fields', which spread over the domain and attract the two types of students. The variable $v_{ij}$ correspond to the signal sent out by school type $j \in \{1,2,3\}$ to attract students of type $i \in \{1,2\}$. Here $j=1,2,3$ correspond to private-, municipal-, and the subsidized school respectively. 
 
 In model 1 a diffusion cross-diffusion equation is used for the $u_{i}$ while the $v_{ij}$ spread due a diffusion equation:
 \begin{align}
@@ -36,11 +67,21 @@ In model 2 the attracting fields are described by a Laplace-equation
 - \Delta v_{ij} = g \left(u_{1},u_{2},u_{3} \right). \label{eq:model_2_1}
 \end{align}
 
+\subsection{boundaries}
+The two possibilities of boundary conditions are:
+\begin{enumerate}
+\item Forcing the variables onto a certain value into the boundary (e.g. zero). Those are called Dirichlet boundary conditions.
+\item Forcing the derivative of the variable onto a certain value into the boundary, i.e. Neumann boundary conditions.
+\end{enumerate}
+
+I propose homogeneous Neumann-boundaries for the students (setting the flow at the boundary to zero), because this ensures, that no students are leaving or entering the domain. 
+
+For the signals of the schools one could also consider homogeneous Neumann-boundaries. As we have source terms, corresponding to the schools, setting the boundary-flux to zero means, that the total signal in our domain constantly increases in time. Therefore in this case homogeneous Dirichlet boundaries are more convenient.
 
 \section{Numerical Approximation}
 
 \subsection{explicit scheme using multiple threads}
-The equations in both models are discretized using a finite-difference approach. \bol{Using a finite Volume approach results in the same method, but is more natural when using this type of equations. It also allows grid refinement and non-quadratic grid-cells; I will try to explain it to you in the upcoming days. It uses a little bit more advanced mathematics but results in (almost) the same numerical method.}
+The equations in both models are discretized using a finite-difference approach.
 
 Using
 \begin{align*}
@@ -57,6 +98,40 @@ Using an explicit euler method in time brings us to the scheme
 \frac{u_{i}(t+ \Delta t,x,y)-u_{i}(t,x,y)}{\Delta t} & \approx \frac{v_{ij}(t,x+\Delta x,y) - 2 v_{ij}(t,x,y) + v_{ij}(t,x - \Delta x,y)}{(\Delta x)^{2}} \\
 &\ + \frac{v_{ij}(t,x,y +\Delta y) - 2 v_{ij}(t,x,y) + v_{ij}(t,x,y - \Delta y)}{(\Delta y)^{2}}.
 \end{align*}
+
+\subsection{the finite Volume approach}
+
+Instead of discretizing the differentials as in the finite difference approach, we consider Volumes, filling out the domain. These Volumes mostly have the shapes of triangles, rectangles, or generalized polygons.
+
+Let us enumerate each Volume by $\Omega_{i}$. To approximate the solution of the diffusion equation
+\begin{align*}
+\frac{\partial u}{\partial t} = \Delta u = \nabla \cdot \nabla u,
+\end{align*}
+the variable $u_{i}(t)$ is thought to be the averaged amount of $u$ in the Volume $\Omega_{i}$ at time $t$, i.e. 
+\begin{align*}
+u_{i}(t) = \frac{1}{\text{Area}(\Omega_{i})} \int_{\Omega_{i}} u(t,x,y) dx\ dy.
+\end{align*}
+
+Using Gauss' theorem (see for https:$//$en.wikipedia.org$/$wiki$/$\\Divergence$\_$theorem) yields
+\begin{align*}
+\frac{\partial u_{i}}{\partial t} &= \frac{\partial}{\partial t} \ \frac{1}{\text{Area}(\Omega_{i})} \int_{\Omega_{i}} u(t,x,y)\ dx\ dy \\
+&= \frac{1}{\text{Area}(\Omega_{i})} \int_{\Omega_{i}} \frac{\partial u}{\partial t} (t,x,y) \ dx\ dy \\
+&= \frac{1}{\text{Area}(\Omega_{i})} \int_{\Omega_{i}} \nabla \cdot \nabla u\  dx\ dy \\
+&= \frac{1}{\text{Area}(\Omega_{i})} \int_{\partial \Omega_{i}} \nabla u \cdot n\  d\sigma,
+\end{align*}
+where $\partial \Omega_{i}$ corresponds to the boundary of the domain and $n$ to its unit normal vector. The last integral has the interpretation of an interaction between the cell and its neighbours, i.e. a flux between those two. If we consider $\Omega_{j}$ to be a neighbouring cell, then the flux is numerically approximated by
+\begin{align*}
+\nabla u \cdot n \approx \frac{u_{i+j}-u_{i}}{\text{distance between the centers of the cells}}. 
+\end{align*}
+
+By doing so for all the neighbours of $\Omega_{i}$ we get the approximation
+\begin{align*}
+\frac{\partial u_{i}}{\partial t} = \frac{1}{\text{Area}(\Omega_{i})} \cdot \sum_{\text{j: j is neighbour of i}} \frac{u_{i+j}-u_{i}}{\text{distance between centers of cells}} \cdot \text{length of edge between cells}.
+\end{align*}
+
+This ordinary differential equation is solved using ordinary schemes (e.g. Euler's method or Runge-Kutta methods).
+
+\ita{I hope this brief introduction helps you to understand the concept of finite Volume approach just a bit.}
 
 \section{Stefan's remarks}
 Here are a few remarks Stefan gave me today:
