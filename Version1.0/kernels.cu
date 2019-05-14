@@ -4,7 +4,13 @@ __global__ void updateV(SDL_Rect *cells, float *u1, float *u2, float *u3, float 
     float rightU1, bottomU1, leftU1, topU1;
     float rightU2, bottomU2, leftU2, topU2;
     float rightU3, bottomU3, leftU3, topU3;
-    float uT = u1[num], vT = v[num], dTemp, dV;
+    float 
+        uT1 = u1[num], 
+        uT2 = u2[num], 
+        uT3 = u3[num], 
+        vT = v[num], 
+        dTemp, 
+        dV;
     float rightV, bottomV, leftV, topV;
     int width = cells[num].w, height = cells[num].h;
     if(s[num] != 0){
@@ -14,6 +20,7 @@ __global__ void updateV(SDL_Rect *cells, float *u1, float *u2, float *u3, float 
         }
         if((s[num] == 1) || (s[num] == 2) || (s[num] == 3)){
             v[num] = 0;
+            return;
         }
     }
     if(num < nX){
@@ -32,12 +39,12 @@ __global__ void updateV(SDL_Rect *cells, float *u1, float *u2, float *u3, float 
                 return;
             }
             dTemp = dV -
-                    c[0] * ((rightU1 - uT) / pow(width, 2)) -
-                    c[0] * ((-uT + bottomU1) / pow(height, 2)) -
-                    c[0] * ((rightU2 - uT) / pow(width, 2)) -
-                    c[0] * ((-uT + bottomU2) / pow(height, 2)) -
-                    c[0] * ((rightU3 - uT) / pow(width, 2)) -
-                    c[0] * ((-uT + bottomU3) / pow(height, 2));
+                    c[0] * ((rightU1 - uT1) / pow(width, 2)) -
+                    c[0] * ((-uT1 + bottomU1) / pow(height, 2)) -
+                    c[1] * ((rightU2 - uT2) / pow(width, 2)) -
+                    c[1] * ((-uT2 + bottomU2) / pow(height, 2)) -
+                    c[2] * ((rightU3 - uT3) / pow(width, 2)) -
+                    c[2] * ((-uT3 + bottomU3) / pow(height, 2));
             float newV = v[num] + dTemp * dTime;
             if(newV < 0){
                 v[num] = 0.0f;
@@ -61,12 +68,12 @@ __global__ void updateV(SDL_Rect *cells, float *u1, float *u2, float *u3, float 
                 return;
             }
             dTemp = dV -
-                    c[0] * ((-uT + leftU1) / pow(width, 2)) - 
-                    c[0] * ((-uT + bottomU1) / pow(height, 2)) -
-                    c[1] * ((-uT + leftU2) / pow(width, 2)) - 
-                    c[1] * ((-uT + bottomU2) / pow(height, 2)) -
-                    c[2] * ((-uT + leftU3) / pow(width, 2)) - 
-                    c[2] * ((-uT + bottomU3) / pow(height, 2));
+                    c[0] * ((-uT1 + leftU1) / pow(width, 2)) - 
+                    c[0] * ((-uT1 + bottomU1) / pow(height, 2)) -
+                    c[1] * ((-uT2 + leftU2) / pow(width, 2)) - 
+                    c[1] * ((-uT2 + bottomU2) / pow(height, 2)) -
+                    c[2] * ((-uT3 + leftU3) / pow(width, 2)) - 
+                    c[2] * ((-uT3 + bottomU3) / pow(height, 2));
             float newV = v[num] + dTemp * dTime;
             if(newV < 0){
                 v[num] = 0.0f;
@@ -93,12 +100,12 @@ __global__ void updateV(SDL_Rect *cells, float *u1, float *u2, float *u3, float 
             return;
         }
         dTemp = dV -
-                c[0] * ((rightU1 - 2 * uT + leftU1) / pow(width, 2)) -
-                c[0] * ((-uT + bottomU1) / pow(height, 2)) -
-                c[1] * ((rightU2 - 2 * uT + leftU2) / pow(width, 2)) -
-                c[1] * ((-uT + bottomU2) / pow(height, 2)) -
-                c[2] * ((rightU3 - 2 * uT + leftU3) / pow(width, 2)) -
-                c[2] * ((-uT + bottomU3) / pow(height, 2)) ;
+                c[0] * ((rightU1 - 2 * uT1 + leftU1) / pow(width, 2)) -
+                c[0] * ((-uT1 + bottomU1) / pow(height, 2)) -
+                c[1] * ((rightU2 - 2 * uT2 + leftU2) / pow(width, 2)) -
+                c[1] * ((-uT2 + bottomU2) / pow(height, 2)) -
+                c[2] * ((rightU3 - 2 * uT3 + leftU3) / pow(width, 2)) -
+                c[2] * ((-uT3 + bottomU3) / pow(height, 2)) ;
         float newV = v[num] + dTemp * dTime;
         if(newV < 0){
             v[num] = 0.0f;
@@ -123,12 +130,12 @@ __global__ void updateV(SDL_Rect *cells, float *u1, float *u2, float *u3, float 
                 return;
             }
             dTemp = dV -
-                    c[0] * ((rightU1 - uT) / pow(width, 2)) - 
-                    c[0] * ((topU1 - uT) / pow(height, 2)) - 
-                    c[1] * ((rightU2 - uT) / pow(width, 2)) - 
-                    c[1] * ((topU2 - uT) / pow(height, 2)) -
-                    c[2] * ((rightU3 - uT) / pow(width, 2)) - 
-                    c[2] * ((topU3 - uT) / pow(height, 2));
+                    c[0] * ((rightU1 - uT1) / pow(width, 2)) - 
+                    c[0] * ((topU1 - uT1) / pow(height, 2)) - 
+                    c[1] * ((rightU2 - uT2) / pow(width, 2)) - 
+                    c[1] * ((topU2 - uT2) / pow(height, 2)) -
+                    c[2] * ((rightU3 - uT3) / pow(width, 2)) - 
+                    c[2] * ((topU3 - uT3) / pow(height, 2));
             float newV = v[num] + dTemp * dTime;
             if(newV < 0){    
                 v[num] = 0.0f;
@@ -152,12 +159,12 @@ __global__ void updateV(SDL_Rect *cells, float *u1, float *u2, float *u3, float 
                 return;
             }
             dTemp = dV -
-                    c[0] * ((-uT + leftU1) / pow(width, 2)) - 
-                    c[0] * ((topU1 - uT) / pow(height, 2)) -
-                    c[1] * ((-uT + leftU2) / pow(width, 2)) - 
-                    c[1] * ((topU2 - uT) / pow(height, 2)) -
-                    c[2] * ((-uT + leftU3) / pow(width, 2)) - 
-                    c[2] * ((topU3 - uT) / pow(height, 2));
+                    c[0] * ((-uT1 + leftU1) / pow(width, 2)) - 
+                    c[0] * ((topU1 - uT1) / pow(height, 2)) -
+                    c[1] * ((-uT2 + leftU2) / pow(width, 2)) - 
+                    c[1] * ((topU2 - uT2) / pow(height, 2)) -
+                    c[2] * ((-uT3 + leftU3) / pow(width, 2)) - 
+                    c[2] * ((topU3 - uT3) / pow(height, 2));
             float newV = v[num] + dTemp * dTime;
             if(newV < 0){    
                 v[num] = 0.0f;
@@ -184,12 +191,12 @@ __global__ void updateV(SDL_Rect *cells, float *u1, float *u2, float *u3, float 
             return;
         }
         dTemp = dV -
-                c[0] * ((rightU1 - 2 * uT + leftU1) / pow(width, 2)) - 
-                c[0] * ((topU1 - uT) / pow(height, 2)) - 
-                c[1] * ((rightU2 - 2 * uT + leftU2) / pow(width, 2)) - 
-                c[1] * ((topU2 - uT) / pow(height, 2)) -
-                c[2] * ((rightU3 - 2 * uT + leftU3) / pow(width, 2)) - 
-                c[2] * ((topU3 - uT) / pow(height, 2));
+                c[0] * ((rightU1 - 2 * uT1 + leftU1) / pow(width, 2)) - 
+                c[0] * ((topU1 - uT1) / pow(height, 2)) - 
+                c[1] * ((rightU2 - 2 * uT2 + leftU2) / pow(width, 2)) - 
+                c[1] * ((topU2 - uT2) / pow(height, 2)) -
+                c[2] * ((rightU3 - 2 * uT3 + leftU3) / pow(width, 2)) - 
+                c[2] * ((topU3 - uT3) / pow(height, 2));
         float newV = v[num] + dTemp * dTime;
         if(newV < 0){
             v[num] = 0.0f;
@@ -217,12 +224,12 @@ __global__ void updateV(SDL_Rect *cells, float *u1, float *u2, float *u3, float 
             return;
         }
         dTemp = dV -
-                c[0] * ((rightU1 - uT) / pow(width, 2)) -
-                c[0] * ((topU1 - 2 * uT + bottomU1) / pow(height, 2)) -
-                c[1] * ((rightU2 - uT) / pow(width, 2)) -
-                c[1] * ((topU2 - 2 * uT + bottomU2) / pow(height, 2)) -
-                c[2] * ((rightU3 - uT) / pow(width, 2)) -
-                c[2] * ((topU3 - 2 * uT + bottomU3) / pow(height, 2));
+                c[0] * ((rightU1 - uT1) / pow(width, 2)) -
+                c[0] * ((topU1 - 2 * uT1 + bottomU1) / pow(height, 2)) -
+                c[1] * ((rightU2 - uT2) / pow(width, 2)) -
+                c[1] * ((topU2 - 2 * uT2 + bottomU2) / pow(height, 2)) -
+                c[2] * ((rightU3 - uT3) / pow(width, 2)) -
+                c[2] * ((topU3 - 2 * uT3 + bottomU3) / pow(height, 2));
         float newV = v[num] + dTemp * dTime;
         if(newV < 0){
             v[num] = 0.0f;
@@ -250,12 +257,12 @@ __global__ void updateV(SDL_Rect *cells, float *u1, float *u2, float *u3, float 
             return;
         }
         dTemp = dV -
-                c[0] * ((-uT + leftU1) / pow(width, 2)) -
-                c[0] * ((topU1 - 2 * uT + bottomU1) / pow(height, 2)) -
-                c[1] * ((-uT + leftU2) / pow(width, 2)) -
-                c[1] * ((topU2 - 2 * uT + bottomU2) / pow(height, 2)) -
-                c[2] * ((-uT + leftU3) / pow(width, 2)) -
-                c[2] * ((topU3 - 2 * uT + bottomU3) / pow(height, 2));
+                c[0] * ((-uT1 + leftU1) / pow(width, 2)) -
+                c[0] * ((topU1 - 2 * uT1 + bottomU1) / pow(height, 2)) -
+                c[1] * ((-uT2 + leftU2) / pow(width, 2)) -
+                c[1] * ((topU2 - 2 * uT2 + bottomU2) / pow(height, 2)) -
+                c[2] * ((-uT3 + leftU3) / pow(width, 2)) -
+                c[2] * ((topU3 - 2 * uT3 + bottomU3) / pow(height, 2));
         float newV = v[num] + dTemp * dTime;
         if(newV < 0){
             v[num] = 0.0f;
@@ -286,12 +293,12 @@ __global__ void updateV(SDL_Rect *cells, float *u1, float *u2, float *u3, float 
         return;
     }
     dTemp = dV -
-            c[0] * ((rightU1 - 2 * uT + leftU1) / pow(width, 2)) - 
-            c[0] * ((topU1 - 2 * uT + bottomU1) / pow(height, 2)) -
-            c[1] * ((rightU2 - 2 * uT + leftU2) / pow(width, 2)) - 
-            c[1] * ((topU2 - 2 * uT + bottomU2) / pow(height, 2)) -
-            c[2] * ((rightU3 - 2 * uT + leftU3) / pow(width, 2)) - 
-            c[2] * ((topU3 - 2 * uT + bottomU3) / pow(height, 2));
+            c[0] * ((rightU1 - 2 * uT1 + leftU1) / pow(width, 2)) - 
+            c[0] * ((topU1 - 2 * uT1 + bottomU1) / pow(height, 2)) -
+            c[1] * ((rightU2 - 2 * uT2 + leftU2) / pow(width, 2)) - 
+            c[1] * ((topU2 - 2 * uT2 + bottomU2) / pow(height, 2)) -
+            c[2] * ((rightU3 - 2 * uT3 + leftU3) / pow(width, 2)) - 
+            c[2] * ((topU3 - 2 * uT3 + bottomU3) / pow(height, 2));
     float newV = v[num] + dTemp * dTime;
     if(newV < 0){
         v[num] = 0.0f;

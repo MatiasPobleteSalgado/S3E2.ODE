@@ -5,11 +5,30 @@
 #include "kernels.cu"
 #include "schoolData.cpp"
 #include <vector>
+#include <cxxopts.hpp>
 
 using namespace std;
 
 int main (int argc, char** argv){
-	bool gui = true;
+    cxxopts::Options options("MyProgram", "One line description of MyProgram");
+    options.add_options(
+        ("g,gui", "Enable use interface")
+    );
+    bool gui = false;
+    try{
+        auto result = options.parse(argc, argv);
+        bool gui = result["gui"].as<bool>();
+    }
+    catch(cxxopts::OptionSpecException e){
+        printf("Spec %s \n", e.what());
+        return 1;
+    }
+    catch(cxxopts::OptionParseException e){
+        printf("Parse %s \n", e.what());
+        return 1;
+    }
+
+
 	bool on = true;
 	srand(time(NULL));
 	// Model definition
@@ -46,13 +65,13 @@ int main (int argc, char** argv){
     cudaMemset(c2, 0, 3 * sizeof(float));
 
     // Set coef values
-    c1[0] = 0.5f;
-    c1[1] = 0.4f; 
-    c1[2] = -0.2f; 
+    c1[0] = -1.0f;
+    c1[1] = 0.0f;
+    c1[2] = 1.0f;
 
-    c2[0] = -0.1f; 
-    c2[1] = 0.6f; 
-    c2[2] = 0.8f; 
+    c2[0] = 1.0f;
+    c2[1] = 0.0f;
+    c2[2] = -1.0f;
 
     // Generate grid according to desired values
     for(int y = 0; y < nY; y++){
@@ -68,6 +87,7 @@ int main (int argc, char** argv){
     // Read Shool data from binary file
     vector<School> schools = getShools("schoolData.bin");
     // Populate s array with school types 
+
     for(auto e: schools){
 	    int ex = e.x * nX;
 		int ey = nY - (e.y * nY);
@@ -87,9 +107,17 @@ int main (int argc, char** argv){
     	s[rand() % (nX * nY)] = 5;
     }
 
-    SDL_Window *scr1, *scr2 = NULL;
-    SDL_Renderer *renderer1, *renderer2 = NULL;
-    SDL_Event e1, e2;
+    /*
+    s[0] = 2;
+    s[105000] = 1;
+    s[105000 + 1024 * 100] = 3;
+    s[105000 + 1024 * 50 + 20] = 4;
+    s[105000 + 1024 * 50 + -20] = 5;
+    */
+    SDL_Window *scr1 = NULL;
+    SDL_Renderer *renderer1 = NULL;
+    SDL_Event e1;
+    SDL_Rect renderer1_viewport;
     if(gui){
 	    // Window variables
 	    scr1 = SDL_CreateWindow (
@@ -101,7 +129,10 @@ int main (int argc, char** argv){
 	        SDL_WINDOW_SHOWN
 	    );
 	    renderer1 = SDL_CreateRenderer(scr1, -1, SDL_RENDERER_ACCELERATED);
+        renderer1_viewport = {0, 0 , 1024, 1024};
+        SDL_RenderSetViewport(renderer1, &renderer1_viewport);
 	    // Window variables
+        /*
 	    scr2 = SDL_CreateWindow (
 	        "Student Simulation", 
 	        SDL_WINDOWPOS_UNDEFINED,
@@ -111,35 +142,61 @@ int main (int argc, char** argv){
 	        SDL_WINDOW_SHOWN
 	    );
 	    renderer2 = SDL_CreateRenderer(scr2, -1, SDL_RENDERER_ACCELERATED);
+        */
     }
+    float zoom = 1.0f;
+    int nx = 0, ny = 0; 
 
     while(on){
-        updateU<<<nX, nY>>>(cells, u1, 1, s, 0.25, nX, nY, 1);
-        updateU<<<nX, nY>>>(cells, u2, 2, s, 0.5, nX, nY, 1);
-        updateU<<<nX, nY>>>(cells, u3, 3, s, 1.0, nX, nY, 1);
+        /*
+        printf(
+            "v1: up=%f down=%f \nv2: up=%f down=%f \n", 
+            v1[105000 + 1], 
+            v1[105000 + 1024 * 100 + 1],
+            v2[105000 - 1], 
+            v2[105000 + 1024 * 100 - 1]
+        );
+        */
+        updateU<<<nX, nY>>>(cells, u1, 1, s, 10.0, nX, nY, 0.1);
+        updateU<<<nX, nY>>>(cells, u2, 2, s, 10.0, nX, nY, 0.1);
+        updateU<<<nX, nY>>>(cells, u3, 3, s, 10.0, nX, nY, 0.1);
         cudaDeviceSynchronize();
 
-        updateV<<<nX, nY>>>(cells, u1, u2, u3, v1, 4, s, c1, nX, nY, 1);
-        updateV<<<nX, nY>>>(cells, u1, u2, u3, v2, 5, s, c2, nX, nY, 1);
+        updateV<<<nX, nY>>>(cells, u1, u2, u3, v1, 4, s, c1, nX, nY, 0.1);
+        updateV<<<nX, nY>>>(cells, u1, u2, u3, v2, 5, s, c2, nX, nY, 0.1);
         cudaDeviceSynchronize();
 
         if(gui){
-		    SDL_SetRenderDrawColor(renderer1, 255, 255, 255, 255);
+		    SDL_SetRenderDrawColor(renderer1, 0, 0, 0, 255);
 	    	SDL_RenderClear(renderer1);
-		    SDL_SetRenderDrawColor(renderer2, 255, 255, 255, 255);
-	    	SDL_RenderClear(renderer2);
 	        while( SDL_PollEvent( &e1 ) != 0 ){
-	            if( e1.type == SDL_QUIT ){
-	                on = false;
-	            }
-	        }
-	        while( SDL_PollEvent( &e2 ) != 0 ){
-	            if( e2.type == SDL_QUIT ){
-	                on = false;
-	            }
-	        }
-	        int x = 0, y = 0;
+	            switch(e1.type){
+                    case SDL_QUIT:
+                        on = false;
+                        break;
+                    case SDL_MOUSEBUTTONDOWN:
+                        switch(e1.button.button){
+                            case SDL_BUTTON_LEFT:
+                                zoom += 0.05;
+                            break;
+                            case SDL_BUTTON_RIGHT:
+                                zoom -= 0.05;
+                                if(zoom < 1){
+                                    zoom = 1;
+                                }
+                            break;
+                        }
 
+                    break;
+                }
+	        }
+            SDL_GetMouseState(&nx, &ny);
+            renderer1_viewport.w = 1024 * zoom;
+            renderer1_viewport.h = 1024 * zoom;
+            renderer1_viewport.x = nx - renderer1_viewport.w / 2;
+            renderer1_viewport.y = ny - renderer1_viewport.w / 2;
+            SDL_RenderSetViewport(renderer1, &renderer1_viewport);
+	        int x = 0, y = 0;
 		    for(int i = 0; i < cellIndx; i++){
 		    	if(x < (nX -1)){
 		    		x++;
@@ -148,24 +205,29 @@ int main (int argc, char** argv){
 		    		x = 0;
 		    		y++;
 		    	}
-	            SDL_SetRenderDrawColor(renderer1, u1[i] / MAX * 255, u2[i] / MAX * 255, u3[i] / MAX * 255, 255);
+                /*
+                SDL_SetRenderDrawColor(
+                    renderer1, 
+                    (u1[i] / MAX * 255) + (v1[i] / MAX * 255) + (v2[i] / MAX * 255), 
+                    (u2[i] / MAX * 255) + (v2[i] / MAX * 255) + (v1[i] / MAX * 255), 
+                    (u3[i] / MAX * 255) + (v1[i] / MAX * 255), 255
+                );
+                */
+                SDL_SetRenderDrawColor(
+                    renderer1, 
+                    (u1[i] + v1[i]) / MAX * 255, 
+                    (u2[i] + (v1[i] + v2[i]) * 0.5) / MAX * 255, 
+                    (u3[i] + v2[i]) / MAX * 255, 
+                    255
+                );
+                SDL_RenderDrawPoint(renderer1, x * zoom, y * zoom);
+
+                /*
+	            SDL_SetRenderDrawColor(renderer1, v1[i] / MAX * 255, 0, v2[i] / MAX * 255, 255);
 		    	SDL_RenderDrawPoint(renderer1, x, y);
-		    }
-		    x = 0;
-		    y = 0;
-		    for(int i = 0; i < cellIndx; i++){
-		    	if(x < (nX -1)){
-		    		x++;
-		    	}
-		    	else{
-		    		x = 0;
-		    		y++;
-		    	}
-	            SDL_SetRenderDrawColor(renderer2, v1[i] / MAX * 255, 0, v2[i] / MAX * 255, 255);
-		    	SDL_RenderDrawPoint(renderer2, x, y);
+                */
 		    }
 		    SDL_RenderPresent(renderer1);
-		    SDL_RenderPresent(renderer2);
         }
 	}
 
@@ -180,7 +242,6 @@ int main (int argc, char** argv){
     cudaFree(s);
 
     SDL_DestroyWindow(scr1);
-    SDL_DestroyWindow(scr2);
     SDL_Quit();
 
     return EXIT_SUCCESS;
