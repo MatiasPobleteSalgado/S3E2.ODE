@@ -92,6 +92,7 @@ int main (int argc, char** argv){
 	    int ex = e.x * nX;
 		int ey = nY - (e.y * nY);
 		int indx = nX * ey + ex;
+        // Verify used space
 		if(s[indx] == 0){
 			s[indx] = e.type;
 		}
