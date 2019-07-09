@@ -157,7 +157,7 @@ int main (int argc, char** argv){
     int nx = 0, ny = 0; 
     int iterations = 0;
     int max_iterations = 1000000; 
-    while(iteracions < max_iterations){
+    while(iterations < max_iterations){
         iterations++;
         /*
         printf(
