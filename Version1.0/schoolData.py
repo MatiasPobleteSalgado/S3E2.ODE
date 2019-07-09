@@ -10,5 +10,6 @@ class SchoolData(ct.Structure):
 	_fields_ = [
 		("x", ct.c_float),
 		("y", ct.c_float),
+		("capacity", ct.c_int),
 		("type", ct.c_int)
 	]

@@ -1,3 +1,16 @@
+__global__ void check_capacity(float *v1, float *v2, int *s, int *cap){
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    if(
+        (s[index] == 1) ||
+        (s[index] == 2) ||
+        (s[index] == 3)
+        ){
+            if((v1[index] + v2[index]) > cap[index]){
+                s[index] = 0;
+            }
+    }
+}
+
 __global__ void updateV(
         SDL_Rect *cells, 
         float *u1, 

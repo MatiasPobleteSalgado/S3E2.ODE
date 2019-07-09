@@ -45,7 +45,7 @@ int main (int argc, char** argv){
     */
     SDL_Rect *cells; // Rectangular info {x, y, width, height} 
     float *u1, *u2, *u3, *v1, *v2, *c1, *c2, *m1, *m2;
-    int *s;
+    int *s, *cap;
     cudaMallocManaged(&cells, nX * nY * sizeof(SDL_Rect));
     cudaMallocManaged(&u1, nX * nY * sizeof(float));
     cudaMallocManaged(&u2, nX * nY * sizeof(float));
@@ -55,6 +55,7 @@ int main (int argc, char** argv){
     cudaMallocManaged(&v2, nX * nY * sizeof(float));
     
     cudaMallocManaged(&s,  nX * nY * sizeof(int));
+    cudaMallocManaged(&cap,  nX * nY * sizeof(int));
     
     cudaMallocManaged(&c1, 3 * sizeof(float));
     cudaMallocManaged(&c2, 3 * sizeof(float));
@@ -103,8 +104,10 @@ int main (int argc, char** argv){
         // Verify used space
 		if(s[indx] == 0){
 			s[indx] = e.type;
+            cap[indx] = e.capacity;
 		}
 		else{
+            cap[indx + 1] = e.capacity;
 			s[indx + 1] = e.type;
 		}
     }
@@ -186,28 +189,7 @@ int main (int argc, char** argv){
                     case SDL_QUIT:
                         on = false;
                         break;
-                    case SDL_MOUSEBUTTONDOWN:
-                        switch(e1.button.button){
-                            case SDL_BUTTON_LEFT:
-                                zoom += 0.05;
-                            break;
-                            case SDL_BUTTON_RIGHT:
-                                zoom -= 0.05;
-                                if(zoom < 1){
-                                    zoom = 1;
-                                }
-                            break;
-                        }
-
-                    break;
                 }
-	        }
-            SDL_GetMouseState(&nx, &ny);
-            renderer1_viewport.w = 1024 * zoom;
-            renderer1_viewport.h = 1024 * zoom;
-            renderer1_viewport.x = nx - renderer1_viewport.w / 2;
-            renderer1_viewport.y = ny - renderer1_viewport.w / 2;
-            SDL_RenderSetViewport(renderer1, &renderer1_viewport);
 	        int x = 0, y = 0;
 		    for(int i = 0; i < cellIndx; i++){
 		    	if(x < (nX -1)){

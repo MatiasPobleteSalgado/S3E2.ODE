@@ -4,7 +4,7 @@ using namespace std;
 
 struct School{
 	float x, y;
-	int type;
+	int capacity, type;
 };
 
 vector<School> getShools(char *path){
