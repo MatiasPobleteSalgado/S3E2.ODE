@@ -157,7 +157,6 @@ int main (int argc, char** argv){
         */
     }
     float zoom = 1.0f;
-    int nx = 0, ny = 0; 
     int iterations = 0;
     int max_iterations = 1000000; 
     while(iterations < max_iterations){
@@ -190,6 +189,7 @@ int main (int argc, char** argv){
                         on = false;
                         break;
                 }
+            }
 	        int x = 0, y = 0;
 		    for(int i = 0; i < cellIndx; i++){
 		    	if(x < (nX -1)){
@@ -199,14 +199,6 @@ int main (int argc, char** argv){
 		    		x = 0;
 		    		y++;
 		    	}
-                /*
-                SDL_SetRenderDrawColor(
-                    renderer1, 
-                    (u1[i] / MAX * 255) + (v1[i] / MAX * 255) + (v2[i] / MAX * 255), 
-                    (u2[i] / MAX * 255) + (v2[i] / MAX * 255) + (v1[i] / MAX * 255), 
-                    (u3[i] / MAX * 255) + (v1[i] / MAX * 255), 255
-                );
-                */
                 SDL_SetRenderDrawColor(
                     renderer1, 
                     (u1[i] + v1[i]) / MAX * 255, 
