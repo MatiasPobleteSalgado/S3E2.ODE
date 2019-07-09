@@ -7,6 +7,7 @@ __global__ void updateV(
         int t, 
         int *s, 
         float *c, 
+        float *m,
         int nX, 
         int nY, 
         float dTime
