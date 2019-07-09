@@ -10,6 +10,7 @@
 using namespace std;
 
 int main (int argc, char** argv){
+    /*
     cxxopts::Options options("MyProgram", "One line description of MyProgram");
     options.add_options(
         ("g,gui", "Enable use interface")
@@ -27,8 +28,9 @@ int main (int argc, char** argv){
         printf("Parse %s \n", e.what());
         return 1;
     }
+    */
 
-
+    bool gui = false;
 	bool on = true;
 	srand(time(NULL));
 	// Model definition
@@ -42,17 +44,23 @@ int main (int argc, char** argv){
 	and their type so the GPU can use that information
     */
     SDL_Rect *cells; // Rectangular info {x, y, width, height} 
-    float *u1, *u2, *u3, *v1, *v2, *c1, *c2;
+    float *u1, *u2, *u3, *v1, *v2, *c1, *c2, *m1, *m2;
     int *s;
     cudaMallocManaged(&cells, nX * nY * sizeof(SDL_Rect));
     cudaMallocManaged(&u1, nX * nY * sizeof(float));
     cudaMallocManaged(&u2, nX * nY * sizeof(float));
     cudaMallocManaged(&u3, nX * nY * sizeof(float));
+
     cudaMallocManaged(&v1, nX * nY * sizeof(float));
     cudaMallocManaged(&v2, nX * nY * sizeof(float));
+    
     cudaMallocManaged(&s,  nX * nY * sizeof(int));
+    
     cudaMallocManaged(&c1, 3 * sizeof(float));
     cudaMallocManaged(&c2, 3 * sizeof(float));
+    
+    cudaMallocManaged(&m1, 3 * sizeof(float));
+    cudaMallocManaged(&m2, 3 * sizeof(float));
 
     // Just assure that all memory is clean
     cudaMemset(u1, 0, nX * nY * sizeof(float));
@@ -147,8 +155,10 @@ int main (int argc, char** argv){
     }
     float zoom = 1.0f;
     int nx = 0, ny = 0; 
-
-    while(on){
+    int iterations = 0;
+    int max_iterations = 1000000; 
+    while(iteracions < max_iterations){
+        iterations++;
         /*
         printf(
             "v1: up=%f down=%f \nv2: up=%f down=%f \n", 
@@ -163,8 +173,8 @@ int main (int argc, char** argv){
         updateU<<<nX, nY>>>(cells, u3, 3, s, 10.0, nX, nY, 0.1);
         cudaDeviceSynchronize();
 
-        updateV<<<nX, nY>>>(cells, u1, u2, u3, v1, 4, s, c1, nX, nY, 0.1);
-        updateV<<<nX, nY>>>(cells, u1, u2, u3, v2, 5, s, c2, nX, nY, 0.1);
+        updateV<<<nX, nY>>>(cells, u1, u2, u3, v1, 4, s, c1, m1, nX, nY, 0.1);
+        updateV<<<nX, nY>>>(cells, u1, u2, u3, v2, 5, s, c2, m2, nX, nY, 0.1);
         cudaDeviceSynchronize();
 
         if(gui){
@@ -231,6 +241,8 @@ int main (int argc, char** argv){
 		    SDL_RenderPresent(renderer1);
         }
 	}
+
+
 
     cudaFree(cells);
     cudaFree(u1);
