@@ -159,6 +159,7 @@ int main (int argc, char** argv){
     int max_iterations = 1000000; 
     while(iterations < max_iterations){
         iterations++;
+        printf("iterations %d\n", iterations);
         /*
         printf(
             "v1: up=%f down=%f \nv2: up=%f down=%f \n", 
