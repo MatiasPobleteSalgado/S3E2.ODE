@@ -4,10 +4,10 @@ __global__ void check_capacity(float *v1, float *v2, int *s, int *cap){
         (s[index] == 1) ||
         (s[index] == 2) ||
         (s[index] == 3)
-        ){
-            if((v1[index] + v2[index]) > cap[index]){
-                s[index] = 0;
-            }
+    ){
+        if((v1[index] + v2[index]) > cap[index]){
+            s[index] = 0;
+        }
     }
 }
 
