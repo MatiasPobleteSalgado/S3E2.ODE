@@ -3,6 +3,7 @@ import requests as rq
 import ctypes as ct
 import json as js
 import pygame as pgm
+import numpy as np
 import argparse
 import utm
 
@@ -13,13 +14,13 @@ from schoolData import *
 import smopy
 
 import pygame_plot
+import struct 
 
 
 min_coordinates = [-38.705326, -72.668784]
 max_coordinates = [-38.761679, -72.528012]
-map = smopy.Map((-38.705326, -72.668784, -38.761679, -72.528012), z=13)
+#map = smopy.Map((-38.705326, -72.668784, -38.761679, -72.528012), z=13)
 #ax = map.show_mpl()
-#pygame_plot.pcolor(ax)
 
 #plt.show()
 
@@ -106,12 +107,35 @@ school_colors = {
 	"Particular Pagado": [0, 0, 255]
 }
 
+n = 1024 * 1024
+file = open("m1.bin", "rb")
+
+nX, nY = 1024, 1024
+data = np.fromfile(file, '>f4') 
+cellIndx = nX * nY
+
 while on:
-	scr.blit((0, 0), map.img)
+	#scr.blit((0, 0), map.img)
 	for e in pgm.event.get():
 		if(e.type == pgm.QUIT):
 			on = False
 	indx = 0
+	x, y  = 0, 0
+	for i in range(cellIndx):
+		if(x < (nX -1)):
+			x +=1
+		else:
+			x = 0
+			y += 1
+			pgm.draw.circle(
+				scr, 
+				(255, 255, 255), 
+				(x, y),
+				data[i], 
+				1
+			)
+		
+	"""
 	for school in json_data:
 		pgm.draw.circle(
 			scr, 
@@ -124,6 +148,7 @@ while on:
 			1
 		)
 		indx += 1
+	"""
 	fps.tick(60)
 	pgm.display.update()
 
