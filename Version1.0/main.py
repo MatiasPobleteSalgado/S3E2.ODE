@@ -89,7 +89,7 @@ points = points[:-2]
 
 indx = 0
 for school in json_data:
-	s = SchoolData(points[indx][0], points[indx][1], json_data["NUM_ALU_MATRI"], schoolTypes[school["NOM_DEPE"]])
+	s = SchoolData(points[indx][0], points[indx][1], json_data[indx]["NUM_ALU_MATRI"], schoolTypes[school["NOM_DEPE"]])
 	file.write(s)
 	indx += 1
 
