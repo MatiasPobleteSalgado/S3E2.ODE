@@ -242,6 +242,8 @@ int main (int argc, char** argv){
         }
 	}
 
+    printf("Saving Results");
+
     FILE *file = fopen("m1.bin", "wb");
     fwrite(m1, sizeof(*m1), nX * nY, file);
     fclose(file);
