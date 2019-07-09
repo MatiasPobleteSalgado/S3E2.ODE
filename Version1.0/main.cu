@@ -242,7 +242,13 @@ int main (int argc, char** argv){
         }
 	}
 
+    FILE *file = fopen("m1.bin", "wb");
+    fwrite(m1, sizeof(*m1), nX * nY, file);
+    fclose(file);
 
+    FILE *file2 = fopen("m2.bin", "wb");
+    fwrite(m2, sizeof(*m2), nX * nY, file);
+    fclose(file2);
 
     cudaFree(cells);
     cudaFree(u1);
