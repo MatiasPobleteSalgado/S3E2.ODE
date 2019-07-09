@@ -59,8 +59,8 @@ int main (int argc, char** argv){
     cudaMallocManaged(&c1, 3 * sizeof(float));
     cudaMallocManaged(&c2, 3 * sizeof(float));
     
-    cudaMallocManaged(&m1, nx * nY * sizeof(float));
-    cudaMallocManaged(&m2, nx * nY * sizeof(float));
+    cudaMallocManaged(&m1, nX * nY * sizeof(float));
+    cudaMallocManaged(&m2, nX * nY * sizeof(float));
 
     // Just assure that all memory is clean
     cudaMemset(u1, 0, nX * nY * sizeof(float));
