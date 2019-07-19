@@ -375,7 +375,16 @@ __global__ void updateV(
     return;
 }
 
-__global__ void updateU(SDL_Rect * cells, float *u, int t, int *s, float c, int nX, int nY, float dTime){
+__global__ void updateU(
+        SDL_Rect * cells, 
+        float *u, 
+        int t, 
+        int *s, 
+        float c, 
+        int nX, 
+        int nY, 
+        float dTime
+    ){
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     float right, bottom, left, top, temp = u[index], dTemp;
     int width = cells[index].w, height = cells[index].h;

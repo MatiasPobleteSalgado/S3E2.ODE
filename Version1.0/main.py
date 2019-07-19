@@ -15,8 +15,9 @@ import smopy
 
 import pygame_plot
 import struct 
+import pandas as pd
 
-
+from pprint import pprint
 min_coordinates = [-38.705326, -72.668784]
 max_coordinates = [-38.761679, -72.528012]
 #map = smopy.Map((-38.705326, -72.668784, -38.761679, -72.528012), z=13)
@@ -63,11 +64,15 @@ json_data =	rq.get(
 
 file = open("schoolData.bin", "wb")
 
+pprint(json_data[0:3])
 json_data = list(
-	[i for i in json_data if i["ubicacion"] == "Urbano"]
+	[i for i in json_data if i["RURAL_RBD"] == 0]
 )
 
-print(json_data[0])
+school_dataframe = pd.DataFrame.from_records(json_data)
+print(school_dataframe)
+
+
 points = []
 for school in json_data:
 	utmCoords = utm.from_latlon(school["LATITUD"], school["LONGITUD"])
@@ -89,7 +94,7 @@ points = points[:-2]
 
 indx = 0
 for school in json_data:
-	s = SchoolData(points[indx][0], points[indx][1], json_data[indx]["NUM_ALU_MATRI"], schoolTypes[school["NOM_DEPE"]])
+	s = SchoolData(points[indx][0], points[indx][1], json_data[indx]["ALUMNOS"]["TOTAL"], schoolTypes[school["NOM_DEPE"]])
 	file.write(s)
 	indx += 1
 
