@@ -31,7 +31,7 @@ def generate_dots(array):
 	return dots
 
 def total_squared_difference(m1, m2):
-	return np.sum(np.mean(m2 - m1))
+	return np.mean(np.square(m2 - m1))
 
 school_colors = {
 	"Municipal": [255, 0, 0],
@@ -56,9 +56,9 @@ total_iterations = len(red_iterations)
 m1_differences = [total_squared_difference(red_iterations[i], red_iterations[i + 1]) for i in range(total_iterations - 1)]
 m2_differences = [total_squared_difference(blue_iterations[i], blue_iterations[i + 1]) for i in range(total_iterations - 1)]
 
-pp.plot(range(500, 10000, 500), m1_differences)
-pp.plot(range(500, 10000, 500), m2_differences)
-#pp.show()
+pp.bar(range(100, 10000, 100), m1_differences)
+pp.bar(range(100, 10000, 100), m2_differences)
+pp.show()
 
 df = pd.DataFrame([range(500, 10000, 500), m1_differences])
 df.to_csv("khe.csv", index=False)

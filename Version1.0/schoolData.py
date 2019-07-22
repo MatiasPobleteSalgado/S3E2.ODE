@@ -1,7 +1,7 @@
 import ctypes as ct
 
 schoolTypes = {
-	"Municipal": 1,
+	"Municipal DAEM": 1,
 	"Particular Subvencionado": 2,
 	"Particular Pagado": 3
 }
