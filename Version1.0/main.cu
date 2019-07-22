@@ -168,7 +168,7 @@ int main (int argc, char** argv){
 
     while(iterations < max_iterations){
         iterations++;
-        if(iterations % 500 == 0){
+        if(iterations % 100 == 0){
             char file_name[15];
             sprintf(file_name, "results/m1_%d.bin", iterations);
 
