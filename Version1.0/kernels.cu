@@ -41,9 +41,9 @@ __global__ void updateV(
     int width = cells[index].w, height = cells[index].h;
     if(s[index] != 0){
         if(s[index] == t){
-            v[index] = 1000;
+           //v[index] = 1000;
            return;
-         }
+        }
     }
     if(index < nX){
         if(index == 0){
@@ -73,6 +73,7 @@ __global__ void updateV(
                 return;
             }
             if((s[index] == 1) || (s[index] == 2) || (s[index] == 3)){
+                printf("%f", newV);
                 m[index] = m[index] + newV;
                 v[index] = 0;
                 return;

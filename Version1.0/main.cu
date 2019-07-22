@@ -6,6 +6,8 @@
 #include "schoolData.cpp"
 #include <vector>
 #include <cxxopts.hpp>
+#include <stdio.h>
+#include <string.h>
 
 using namespace std;
 
@@ -30,9 +32,9 @@ int main (int argc, char** argv){
     }
     */
 
-    bool gui = true;
+    bool gui = false;
 	bool on = true;
-	srand(time(NULL));
+	srand(1);
 	// Model definition
     double dimX = 2048, dimY = 2048;
     int nX = 1024, nY = 1024, cellIndx = 0, scale = 1, MAX = 1000;
@@ -113,10 +115,14 @@ int main (int argc, char** argv){
     }
 
     for(int i = 0; i < 200; i++){
-    	s[rand() % (nX * nY)] = 4;
+        int index = rand() % (nX * nY); 
+    	s[index] = 4;
+        v1[index] = 10000;
     }
     for(int i = 0; i < 100; i++){
-    	s[rand() % (nX * nY)] = 5;
+        int index = rand() % (nX * nY);
+    	s[index] = 5;
+        v2[index] = 10000;
     }
 
     /*
@@ -158,12 +164,31 @@ int main (int argc, char** argv){
     }
     float zoom = 1.0f;
     int iterations = 0;
-    int max_iterations = 1000000; 
+    int max_iterations = 10000; 
+
     while(iterations < max_iterations){
         iterations++;
-        if(iterations % 100){
-            printf("iterations %d\n", iterations);
+        if(iterations % 500 == 0){
+            char file_name[15];
+            sprintf(file_name, "results/m1_%d.bin", iterations);
+
+            FILE *file = fopen(file_name, "wb");
+            fwrite(m1, sizeof(float), nX * nY, file);
+            fclose(file);
+
+            sprintf(file_name, "results/m2_%d.bin", iterations);
+            
+            FILE *file2 = fopen(file_name, "wb");
+            fwrite(m2, sizeof(float), nX * nY, file2);
+            fclose(file2);            
         }
+
+        /*
+
+        if(iterations % 100){
+            //printf("iterations %d\n", iterations);
+        }
+        */
         /*
         printf(
             "v1: up=%f down=%f \nv2: up=%f down=%f \n", 
@@ -176,7 +201,7 @@ int main (int argc, char** argv){
         updateU<<<nX, nY>>>(cells, u1, 1, s, 10.0, nX, nY, 0.1);
         updateU<<<nX, nY>>>(cells, u2, 2, s, 10.0, nX, nY, 0.1);
         updateU<<<nX, nY>>>(cells, u3, 3, s, 10.0, nX, nY, 0.1);
-        cudaDeviceSynchronize();
+        //cudaDeviceSynchronize();
 
         updateV<<<nX, nY>>>(cells, u1, u2, u3, v1, 4, s, c1, m1, nX, nY, 0.1);
         updateV<<<nX, nY>>>(cells, u1, u2, u3, v2, 5, s, c2, m2, nX, nY, 0.1);
@@ -219,15 +244,15 @@ int main (int argc, char** argv){
         }
 	}
 
-    printf("Saving Results");
-
+    /*
     FILE *file = fopen("m1.bin", "wb");
-    fwrite(m1, sizeof(*m1), nX * nY, file);
+    fwrite(m1, sizeof(float), nX * nY, file);
     fclose(file);
 
     FILE *file2 = fopen("m2.bin", "wb");
-    fwrite(m2, sizeof(*m2), nX * nY, file);
+    fwrite(m2, sizeof(float), nX * nY, file2);
     fclose(file2);
+    */
 
     cudaFree(cells);
     cudaFree(u1);
