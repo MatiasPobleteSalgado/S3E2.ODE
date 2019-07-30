@@ -76,13 +76,17 @@ int main (int argc, char** argv){
     cudaMemset(c2, 0, 3 * sizeof(float));
 
     // Set coef values
-    c1[0] = -1.0f;
-    c1[1] = 0.0f;
-    c1[2] = 1.0f;
 
-    c2[0] = 1.0f;
-    c2[1] = 0.0f;
-    c2[2] = -1.0f;
+
+    // Non vulnerable
+    c1[0] = -0.1f; // Municipal
+    c1[1] = 5.0f;  // Subvencionado
+    c1[2] = 10.0f; // Privado
+ 
+    // Vulnerable
+    c2[0] = 10.0f;
+    c2[1] = 5.0f;
+    c2[2] = -0.1f;
 
     // Generate grid according to desired values
     for(int y = 0; y < nY; y++){
@@ -106,32 +110,26 @@ int main (int argc, char** argv){
         // Verify used space
 		if(s[indx] == 0){
 			s[indx] = e.type;
-            cap[indx] = e.capacity;
+            cap[indx] = e.capacity * 1000;
 		}
 		else{
-            cap[indx + 1] = e.capacity;
+            cap[indx + 1] = e.capacity * 1000;
 			s[indx + 1] = e.type;
 		}
     }
 
-    for(int i = 0; i < 200; i++){
+    for(int i = 0; i < 18244; i++){
         int index = rand() % (nX * nY); 
     	s[index] = 4;
-        v1[index] = 10000;
+        v1[index] = 2000;
     }
-    for(int i = 0; i < 100; i++){
+    for(int i = 0; i < 12999; i++){
         int index = rand() % (nX * nY);
     	s[index] = 5;
-        v2[index] = 10000;
+        v2[index] = 2000;
     }
 
-    /*
-    s[0] = 2;
-    s[105000] = 1;
-    s[105000 + 1024 * 100] = 3;
-    s[105000 + 1024 * 50 + 20] = 4;
-    s[105000 + 1024 * 50 + -20] = 5;
-    */
+
     SDL_Window *scr1 = NULL;
     SDL_Renderer *renderer1 = NULL;
     SDL_Event e1;
@@ -164,11 +162,53 @@ int main (int argc, char** argv){
     }
     float zoom = 1.0f;
     int iterations = 0;
-    int max_iterations = 10000; 
+    int max_iterations = 20000;
+
+    float delta_t = 0.01;
+
+    for(int i = 0; i < 10000; i++){
+        updateU<<<nX, nY>>>(cells, u1, 1, s, 10.0, nX, nY, delta_t);
+        updateU<<<nX, nY>>>(cells, u2, 2, s, 10.0, nX, nY, delta_t);
+        updateU<<<nX, nY>>>(cells, u3, 3, s, 10.0, nX, nY, delta_t);
+        cudaDeviceSynchronize();
+
+        if(gui){
+            SDL_SetRenderDrawColor(renderer1, 0, 0, 0, 255);
+            SDL_RenderClear(renderer1);
+            while( SDL_PollEvent( &e1 ) != 0 ){
+                switch(e1.type){
+                    case SDL_QUIT:
+                        on = false;
+                        break;
+                }
+            }
+            int x = 0, y = 0;
+            for(int i = 0; i < cellIndx; i++){
+                if(x < (nX -1)){
+                    x++;
+                }
+                else{
+                    x = 0;
+                    y++;
+                }
+                SDL_SetRenderDrawColor(
+                    renderer1, 
+                    (u1[i]) / MAX * 255, 
+                    (u2[i]) / MAX * 255, 
+                    (u3[i]) / MAX * 255, 
+                    255
+                );
+                SDL_RenderDrawPoint(renderer1, x * zoom, y * zoom);
+
+            }
+            SDL_RenderPresent(renderer1);
+        }
+    }
 
     while(iterations < max_iterations){
         iterations++;
-        if(iterations % 100 == 0){
+
+        if(iterations % 1000 == 0){
             char file_name[15];
             sprintf(file_name, "results/m1_%d.bin", iterations);
 
@@ -183,28 +223,13 @@ int main (int argc, char** argv){
             fclose(file2);            
         }
 
-        /*
+        updateU<<<nX, nY>>>(cells, u1, 1, s, 10.0, nX, nY, delta_t);
+        updateU<<<nX, nY>>>(cells, u2, 2, s, 10.0, nX, nY, delta_t);
+        updateU<<<nX, nY>>>(cells, u3, 3, s, 10.0, nX, nY, delta_t);
+        cudaDeviceSynchronize();
 
-        if(iterations % 100){
-            //printf("iterations %d\n", iterations);
-        }
-        */
-        /*
-        printf(
-            "v1: up=%f down=%f \nv2: up=%f down=%f \n", 
-            v1[105000 + 1], 
-            v1[105000 + 1024 * 100 + 1],
-            v2[105000 - 1], 
-            v2[105000 + 1024 * 100 - 1]
-        );
-        */
-        updateU<<<nX, nY>>>(cells, u1, 1, s, 10.0, nX, nY, 0.1);
-        updateU<<<nX, nY>>>(cells, u2, 2, s, 10.0, nX, nY, 0.1);
-        updateU<<<nX, nY>>>(cells, u3, 3, s, 10.0, nX, nY, 0.1);
-        //cudaDeviceSynchronize();
-
-        updateV<<<nX, nY>>>(cells, u1, u2, u3, v1, 4, s, c1, m1, nX, nY, 0.1);
-        updateV<<<nX, nY>>>(cells, u1, u2, u3, v2, 5, s, c2, m2, nX, nY, 0.1);
+        updateV<<<nX, nY>>>(cells, u1, u2, u3, cap, v1, 4, s, c1, m1, m2, nX, nY, delta_t);
+        updateV<<<nX, nY>>>(cells, u1, u2, u3, cap, v2, 5, s, c2, m2, m2, nX, nY, delta_t);
         cudaDeviceSynchronize();
 
         if(gui){
@@ -235,24 +260,10 @@ int main (int argc, char** argv){
                 );
                 SDL_RenderDrawPoint(renderer1, x * zoom, y * zoom);
 
-                /*
-	            SDL_SetRenderDrawColor(renderer1, v1[i] / MAX * 255, 0, v2[i] / MAX * 255, 255);
-		    	SDL_RenderDrawPoint(renderer1, x, y);
-                */
 		    }
 		    SDL_RenderPresent(renderer1);
         }
 	}
-
-    /*
-    FILE *file = fopen("m1.bin", "wb");
-    fwrite(m1, sizeof(float), nX * nY, file);
-    fclose(file);
-
-    FILE *file2 = fopen("m2.bin", "wb");
-    fwrite(m2, sizeof(float), nX * nY, file2);
-    fclose(file2);
-    */
 
     cudaFree(cells);
     cudaFree(u1);
@@ -264,8 +275,11 @@ int main (int argc, char** argv){
     cudaFree(c2);
     cudaFree(s);
 
-    SDL_DestroyWindow(scr1);
-    SDL_Quit();
+    if(gui){
+        SDL_DestroyWindow(scr1);
+        SDL_Quit();        
+    }
+
 
     return EXIT_SUCCESS;
 }

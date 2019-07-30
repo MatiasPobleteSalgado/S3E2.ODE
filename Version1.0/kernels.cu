@@ -1,32 +1,21 @@
-__global__ void check_capacity(float *v1, float *v2, int *s, int *cap){
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
-    if(
-        (s[index] == 1) ||
-        (s[index] == 2) ||
-        (s[index] == 3)
-    ){
-        if((v1[index] + v2[index]) > cap[index]){
-            s[index] = 0;
-        }
-    }
-}
-
 __global__ void updateV(
         SDL_Rect *cells, 
         float *u1, 
         float *u2, 
-        float *u3, 
+        float *u3,
+        int *cap,
         float *v, 
         int t, 
         int *s, 
         float *c, 
-        float *m,
+        float *m1,
+        float *m2,
         int nX, 
         int nY, 
         float dTime
     ){
     int index = blockIdx.x * blockDim.x + threadIdx.x;
-    int cT = 1;
+    int cT = 10;
     float rightU1, bottomU1, leftU1, topU1;
     float rightU2, bottomU2, leftU2, topU2;
     float rightU3, bottomU3, leftU3, topU3;
@@ -39,12 +28,14 @@ __global__ void updateV(
         dV;
     float rightV, bottomV, leftV, topV;
     int width = cells[index].w, height = cells[index].h;
+    /*
     if(s[index] != 0){
         if(s[index] == t){
            //v[index] = 1000;
            return;
         }
     }
+    */
     if(index < nX){
         if(index == 0){
             rightU1  = u1[index + 1];
@@ -73,10 +64,12 @@ __global__ void updateV(
                 return;
             }
             if((s[index] == 1) || (s[index] == 2) || (s[index] == 3)){
-                printf("%f", newV);
-                m[index] = m[index] + newV;
-                v[index] = 0;
-                return;
+                if((m1[index] + m2[index]) < cap[index]){
+                    if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;}
+                }
+                else{
+                    s[index] = 0;
+                }
             }
             v[index] = newV;
             return;
@@ -108,9 +101,12 @@ __global__ void updateV(
                 return;
             }
             if((s[index] == 1) || (s[index] == 2) || (s[index] == 3)){
-                m[index] = m[index] + newV;
-                v[index] = 0;
-                return;
+                if((m1[index] + m2[index]) < cap[index]){
+                    if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;}
+                }
+                else{
+                    s[index] = 0;
+                }
             }
             v[index] = newV;
             return;
@@ -145,9 +141,12 @@ __global__ void updateV(
             return;
         }
         if((s[index] == 1) || (s[index] == 2) || (s[index] == 3)){
-            m[index] = m[index] + newV;
-            v[index] = 0;
-            return;
+            if((m1[index] + m2[index]) < cap[index]){
+                if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;}
+            }
+            else{
+                s[index] = 0;
+            }
         }
         v[index] = newV;
         return;
@@ -175,14 +174,17 @@ __global__ void updateV(
                     c[2] * ((rightU3 - uT3) / pow(width, 2)) - 
                     c[2] * ((topU3 - uT3) / pow(height, 2));
             float newV = v[index] + dTemp * dTime;
-            if(newV < 0){    
+            if(newV < 0){
                 v[index] = 0.0f;
                 return;
             }
             if((s[index] == 1) || (s[index] == 2) || (s[index] == 3)){
-                m[index] = m[index] + newV;
-                v[index] = 0;
-                return;
+                if((m1[index] + m2[index]) < cap[index]){
+                    if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;}
+                }
+                else{
+                    s[index] = 0;
+                }
             }
             v[index] = newV;
             return;
@@ -209,14 +211,17 @@ __global__ void updateV(
                     c[2] * ((-uT3 + leftU3) / pow(width, 2)) - 
                     c[2] * ((topU3 - uT3) / pow(height, 2));
             float newV = v[index] + dTemp * dTime;
-            if(newV < 0){    
+            if(newV < 0){
                 v[index] = 0.0f;
                 return;
             }
             if((s[index] == 1) || (s[index] == 2) || (s[index] == 3)){
-                m[index] = m[index] + newV;
-                v[index] = 0;
-                return;
+                if((m1[index] + m2[index]) < cap[index]){
+                    if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;}
+                }
+                else{
+                    s[index] = 0;
+                }
             }
             v[index] = newV;
             return;
@@ -251,9 +256,12 @@ __global__ void updateV(
             return;
         }
         if((s[index] == 1) || (s[index] == 2) || (s[index] == 3)){
-            m[index] = m[index] + newV;
-            v[index] = 0;
-            return;
+            if((m1[index] + m2[index]) < cap[index]){
+                if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;}
+            }
+            else{
+                s[index] = 0;
+            }
         }
         v[index] = newV;
         return;
@@ -289,9 +297,12 @@ __global__ void updateV(
             return;
         }
         if((s[index] == 1) || (s[index] == 2) || (s[index] == 3)){
-            m[index] = m[index] + newV;
-            v[index] = 0;
-            return;
+            if((m1[index] + m2[index]) < cap[index]){
+                if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;}
+            }
+            else{
+                s[index] = 0;
+            }
         }
         v[index] = newV;
         return;
@@ -327,9 +338,12 @@ __global__ void updateV(
             return;
         }
         if((s[index] == 1) || (s[index] == 2) || (s[index] == 3)){
-            m[index] = m[index] + newV;
-            v[index] = 0;
-            return;
+            if((m1[index] + m2[index]) < cap[index]){
+                if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;}
+            }
+            else{
+                s[index] = 0;
+            }
         }
         v[index] = newV;
         return;
@@ -368,14 +382,18 @@ __global__ void updateV(
         return;
     }
     if((s[index] == 1) || (s[index] == 2) || (s[index] == 3)){
-            m[index] = m[index] + newV;
-            v[index] = 0;
-            return;
+        if((m1[index] + m2[index]) < cap[index]){
+            if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;}
         }
-        v[index] = newV;
+        else{
+            s[index] = 0;
+        }
+    }
+    v[index] = newV;
     return;
 }
 
+//######################################################################################################################################################
 __global__ void updateU(
         SDL_Rect * cells, 
         float *u, 

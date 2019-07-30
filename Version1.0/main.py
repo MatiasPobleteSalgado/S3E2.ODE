@@ -8,7 +8,7 @@ import argparse
 import utm
 
 from scipy.spatial import Voronoi, voronoi_plot_2d
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, normalize
 from schoolData import *
 
 import smopy
@@ -57,7 +57,7 @@ class VertexData(ct.Structure):
 	]
 
 comuneCode = "09101" #args.comune
-year = "2012" #args.year
+year = "2014" #args.year
 
 #- Get data on JSON format from web service
 json_data =	rq.get(
@@ -71,31 +71,39 @@ json_data = list(
 	[i for i in json_data if i["RURAL_RBD"] == 0]
 )
 
-
-school_dataframe = pd.DataFrame.from_records(json_data)
-students = json_normalize(
-	data = json_data
-)
-print(students["ALUMNOS.TOTAL"].sum(), students["ALUMNOS.NO_VULNERABLES"].sum())
-print(students["ALUMNOS.TOTAL"].sum() - students["ALUMNOS.NO_VULNERABLES"].sum())
+print(json_data[0])
 points = []
+
 for school in json_data:
 	utmCoords = utm.from_latlon(school["LATITUD"], school["LONGITUD"])
 	points.append(
 		[utmCoords[0], utmCoords[1]]
 	)
+	school["UTM"] = [utmCoords[0], utmCoords[1]]
+
+school_dataframe = pd.DataFrame.from_records(json_data)
+students = json_normalize(
+	data = json_data
+)
+print(students["ALUMNOS.TOTAL"].max())
+print(students["ALUMNOS.TOTAL"].sum(), students["ALUMNOS.NO_VULNERABLES"].sum())
+print(students["ALUMNOS.TOTAL"].sum() - students["ALUMNOS.NO_VULNERABLES"].sum())
 
 
+
+print(school_dataframe[["LATITUD", "LONGITUD", "UTM"]])
 min_coordinates = utm.from_latlon(min_coordinates[0], min_coordinates[1])
 max_coordinates = utm.from_latlon(max_coordinates[0], max_coordinates[1])
 points.append([min_coordinates[0], min_coordinates[1]])
 points.append([max_coordinates[0], max_coordinates[1]])
+
 scaler = MinMaxScaler()
 scaler.fit(points)
 
 print(scaler.get_params())
 points = scaler.transform(points)
-points = points[:-2]
+#points = normalize(points)
+#points = points[:-2]
 
 indx = 0
 for school in json_data:
@@ -106,6 +114,40 @@ for school in json_data:
 file.close()
 print("Saved %d schools" % indx)
 
+on = True
+fps = pgm.time.Clock()
+x_res, y_res = 1024, 1024
+scr = pgm.display.set_mode([x_res, y_res])
+
+school_colors = {
+	"Municipal DAEM": [255, 0, 0],
+	"Particular Subvencionado": [0, 255, 0],
+	"Particular Pagado": [0, 0, 255]
+}
+
+
+while on:
+	#scr.blit((0, 0), map.img)
+	for e in pgm.event.get():
+		if(e.type == pgm.QUIT):
+			on = False
+	indx = 0
+	x, y  = 0, 0
+
+	for school in json_data:
+		pgm.draw.circle(
+			scr, 
+			school_colors[school["NOM_DEPE"]], 
+			(
+				int(points[indx][0] * x_res), 
+				y_res - int(points[indx][1] * y_res)
+			), 
+			1, 
+			1
+		)
+		indx += 1
+		fps.tick(60)
+	pgm.display.update()
 """
 #- Using voronoi teselation
 #- Generate point vector
