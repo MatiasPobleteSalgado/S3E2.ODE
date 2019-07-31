@@ -20,8 +20,13 @@ import json
 from pandas.io.json import json_normalize
 
 from pprint import pprint
+
+-38.705307, -72.650471
 min_coordinates = [-38.705326, -72.668784]
 max_coordinates = [-38.761679, -72.528012]
+
+#min_coordinates = [-38.705307, -72.650471]
+#max_coordinates = [-38.761679, -72.528012]
 #map = smopy.Map((-38.705326, -72.668784, -38.761679, -72.528012), z=13)
 #ax = map.show_mpl()
 
@@ -68,10 +73,9 @@ file = open("schoolData.bin", "wb")
 
 
 json_data = list(
-	[i for i in json_data if i["RURAL_RBD"] == 0]
+	[i for i in json_data if i["RURAL_RBD"] == 0 and i["NOM_RBD"] not in ["ESCUELA EPU NEWEN", "LICEO TECNICO PROF. CENTENARIO"]]
 )
 
-print(json_data[0])
 points = []
 
 for school in json_data:
@@ -90,8 +94,6 @@ print(students["ALUMNOS.TOTAL"].sum(), students["ALUMNOS.NO_VULNERABLES"].sum())
 print(students["ALUMNOS.TOTAL"].sum() - students["ALUMNOS.NO_VULNERABLES"].sum())
 
 
-
-print(school_dataframe[["LATITUD", "LONGITUD", "UTM"]])
 min_coordinates = utm.from_latlon(min_coordinates[0], min_coordinates[1])
 max_coordinates = utm.from_latlon(max_coordinates[0], max_coordinates[1])
 points.append([min_coordinates[0], min_coordinates[1]])
@@ -103,11 +105,17 @@ scaler.fit(points)
 print(scaler.get_params())
 points = scaler.transform(points)
 #points = normalize(points)
-#points = points[:-2]
+points = points[:-2]
 
 indx = 0
 for school in json_data:
-	s = SchoolData(points[indx][0], points[indx][1], json_data[indx]["ALUMNOS"]["TOTAL"], schoolTypes[school["NOM_DEPE"]])
+	s = SchoolData(
+		int(school["RBD"]),
+		points[indx][0], 
+		points[indx][1], 
+		json_data[indx]["ALUMNOS"]["TOTAL"], 
+		schoolTypes[school["NOM_DEPE"]]
+	)
 	file.write(s)
 	indx += 1
 

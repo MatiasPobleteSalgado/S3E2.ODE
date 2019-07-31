@@ -8,6 +8,7 @@ schoolTypes = {
 
 class SchoolData(ct.Structure):
 	_fields_ = [
+		("id", ct.c_int),
 		("x", ct.c_float),
 		("y", ct.c_float),
 		("capacity", ct.c_int),

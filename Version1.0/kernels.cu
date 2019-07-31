@@ -15,7 +15,7 @@ __global__ void updateV(
         float dTime
     ){
     int index = blockIdx.x * blockDim.x + threadIdx.x;
-    int cT = 10;
+    int cT = 1;
     float rightU1, bottomU1, leftU1, topU1;
     float rightU2, bottomU2, leftU2, topU2;
     float rightU3, bottomU3, leftU3, topU3;
@@ -65,7 +65,7 @@ __global__ void updateV(
             }
             if((s[index] == 1) || (s[index] == 2) || (s[index] == 3)){
                 if((m1[index] + m2[index]) < cap[index]){
-                    if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;}
+                    if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;} return;
                 }
                 else{
                     s[index] = 0;
@@ -102,7 +102,7 @@ __global__ void updateV(
             }
             if((s[index] == 1) || (s[index] == 2) || (s[index] == 3)){
                 if((m1[index] + m2[index]) < cap[index]){
-                    if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;}
+                    if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;} return;
                 }
                 else{
                     s[index] = 0;
@@ -142,7 +142,7 @@ __global__ void updateV(
         }
         if((s[index] == 1) || (s[index] == 2) || (s[index] == 3)){
             if((m1[index] + m2[index]) < cap[index]){
-                if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;}
+                if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;} return;
             }
             else{
                 s[index] = 0;
@@ -180,7 +180,7 @@ __global__ void updateV(
             }
             if((s[index] == 1) || (s[index] == 2) || (s[index] == 3)){
                 if((m1[index] + m2[index]) < cap[index]){
-                    if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;}
+                    if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;} return;
                 }
                 else{
                     s[index] = 0;
@@ -217,7 +217,7 @@ __global__ void updateV(
             }
             if((s[index] == 1) || (s[index] == 2) || (s[index] == 3)){
                 if((m1[index] + m2[index]) < cap[index]){
-                    if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;}
+                    if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;} return;
                 }
                 else{
                     s[index] = 0;
@@ -257,7 +257,7 @@ __global__ void updateV(
         }
         if((s[index] == 1) || (s[index] == 2) || (s[index] == 3)){
             if((m1[index] + m2[index]) < cap[index]){
-                if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;}
+                if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;} return;
             }
             else{
                 s[index] = 0;
@@ -298,7 +298,7 @@ __global__ void updateV(
         }
         if((s[index] == 1) || (s[index] == 2) || (s[index] == 3)){
             if((m1[index] + m2[index]) < cap[index]){
-                if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;}
+                if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;} return;
             }
             else{
                 s[index] = 0;
@@ -339,7 +339,7 @@ __global__ void updateV(
         }
         if((s[index] == 1) || (s[index] == 2) || (s[index] == 3)){
             if((m1[index] + m2[index]) < cap[index]){
-                if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;}
+                if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;} return;
             }
             else{
                 s[index] = 0;
@@ -383,7 +383,7 @@ __global__ void updateV(
     }
     if((s[index] == 1) || (s[index] == 2) || (s[index] == 3)){
         if((m1[index] + m2[index]) < cap[index]){
-            if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;}
+            if(t == 4){m1[index] = m1[index] + newV;} else{m2[index] = m2[index] + newV;} return;
         }
         else{
             s[index] = 0;

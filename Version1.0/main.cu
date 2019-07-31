@@ -8,6 +8,7 @@
 #include <cxxopts.hpp>
 #include <stdio.h>
 #include <string.h>
+#include "distributions.h"
 
 using namespace std;
 
@@ -47,7 +48,8 @@ int main (int argc, char** argv){
     */
     SDL_Rect *cells; // Rectangular info {x, y, width, height} 
     float *u1, *u2, *u3, *v1, *v2, *c1, *c2, *m1, *m2;
-    int *s, *cap;
+    int *s, *cap, *ids;
+
     cudaMallocManaged(&cells, nX * nY * sizeof(SDL_Rect));
     cudaMallocManaged(&u1, nX * nY * sizeof(float));
     cudaMallocManaged(&u2, nX * nY * sizeof(float));
@@ -76,17 +78,15 @@ int main (int argc, char** argv){
     cudaMemset(c2, 0, 3 * sizeof(float));
 
     // Set coef values
-
-
     // Non vulnerable
-    c1[0] = -0.1f; // Municipal
-    c1[1] = 5.0f;  // Subvencionado
-    c1[2] = 10.0f; // Privado
+    c1[0] = 3.0f; // Municipal
+    c1[1] = 4.0f;  // Subvencionado
+    c1[2] = 40.0f; // Privado
  
     // Vulnerable
-    c2[0] = 10.0f;
-    c2[1] = 5.0f;
-    c2[2] = -0.1f;
+    c2[0] = 20.0f;
+    c2[1] = 4.0f;
+    c2[2] = 3.0f;
 
     // Generate grid according to desired values
     for(int y = 0; y < nY; y++){
@@ -103,11 +103,13 @@ int main (int argc, char** argv){
     vector<School> schools = getShools("schoolData.bin");
     // Populate s array with school types 
 
+    ids = (int*)malloc(sizeof(int) * nX * nY);
     for(auto e: schools){
 	    int ex = e.x * nX;
 		int ey = nY - (e.y * nY);
 		int indx = nX * ey + ex;
         // Verify used space
+        ids[indx] = e.id;
 		if(s[indx] == 0){
 			s[indx] = e.type;
             cap[indx] = e.capacity * 1000;
@@ -118,18 +120,34 @@ int main (int argc, char** argv){
 		}
     }
 
+
+    FILE *file = fopen("school_ids.bin", "wb");
+    fwrite(ids, sizeof(int), nX * nY, file);
+    fclose(file);
+    
+    /*
     for(int i = 0; i < 18244; i++){
         int index = rand() % (nX * nY); 
     	s[index] = 4;
-        v1[index] = 2000;
+        v1[index] = 10000;
     }
     for(int i = 0; i < 12999; i++){
         int index = rand() % (nX * nY);
     	s[index] = 5;
-        v2[index] = 2000;
+        v2[index] = 10000;
     }
-
-
+    
+    */
+    int max_density = 1000;
+    int index = 0;
+    for(int y=0; y<1024; y++){
+        for(int x=0; x<1024; x++){
+            v1[index] = density_center[x] * density_center[1024 - y] * max_density * 2;
+            v2[index] = density_x[x] * density_y[1024 - y] * max_density;
+            index++;
+        }
+    }
+    
     SDL_Window *scr1 = NULL;
     SDL_Renderer *renderer1 = NULL;
     SDL_Event e1;
@@ -162,16 +180,16 @@ int main (int argc, char** argv){
     }
     float zoom = 1.0f;
     int iterations = 0;
-    int max_iterations = 20000;
+    int max_iterations = 50000;
 
-    float delta_t = 0.01;
+    float delta_t = 0.1f;
 
     for(int i = 0; i < 10000; i++){
         updateU<<<nX, nY>>>(cells, u1, 1, s, 10.0, nX, nY, delta_t);
         updateU<<<nX, nY>>>(cells, u2, 2, s, 10.0, nX, nY, delta_t);
         updateU<<<nX, nY>>>(cells, u3, 3, s, 10.0, nX, nY, delta_t);
         cudaDeviceSynchronize();
-
+        /*
         if(gui){
             SDL_SetRenderDrawColor(renderer1, 0, 0, 0, 255);
             SDL_RenderClear(renderer1);
@@ -193,9 +211,9 @@ int main (int argc, char** argv){
                 }
                 SDL_SetRenderDrawColor(
                     renderer1, 
-                    (u1[i]) / MAX * 255, 
-                    (u2[i]) / MAX * 255, 
-                    (u3[i]) / MAX * 255, 
+                    (u1[i] + v1[i]) / MAX * 255, 
+                    (u2[i] + (v1[i] + v2[i]) * 0.5) / MAX * 255, 
+                    (u3[i] + v2[i]) / MAX * 255, 
                     255
                 );
                 SDL_RenderDrawPoint(renderer1, x * zoom, y * zoom);
@@ -203,12 +221,22 @@ int main (int argc, char** argv){
             }
             SDL_RenderPresent(renderer1);
         }
+        */
     }
 
     while(iterations < max_iterations){
         iterations++;
 
+        if(iterations == max_iterations -1){
+            for(int i = 0; i < 1024 * 1024; i++){
+                if(m1[i] != 0 || m2[i] != 0){
+                    printf("m1=%f m2=%f\n", m1[i] / 1000, m2[i] / 1000);
+                }
+            }
+        }
+
         if(iterations % 1000 == 0){
+            printf("Saving iteration %d\n", iterations);
             char file_name[15];
             sprintf(file_name, "results/m1_%d.bin", iterations);
 
@@ -220,7 +248,32 @@ int main (int argc, char** argv){
             
             FILE *file2 = fopen(file_name, "wb");
             fwrite(m2, sizeof(float), nX * nY, file2);
-            fclose(file2);            
+            fclose(file2);  
+            if(gui){
+                SDL_SetRenderDrawColor(renderer1, 0, 0, 0, 255);
+                SDL_RenderClear(renderer1);
+                int x = 0, y = 0;
+                for(int i = 0; i < cellIndx; i++){
+                    if(x < (nX -1)){
+                        x++;
+                    }
+                    else{
+                        x = 0;
+                        y++;
+                    }
+                    SDL_SetRenderDrawColor(
+                        renderer1, 
+                        (u1[i] + v1[i]) / MAX * 255, 
+                        (u2[i] + (v1[i] + v2[i]) * 0.5) / MAX * 255, 
+                        (u3[i] + v2[i]) / MAX * 255, 
+                        255
+                    );
+                    SDL_RenderDrawPoint(renderer1, x * zoom, y * zoom);
+
+                }
+                SDL_RenderPresent(renderer1);
+            }
+
         }
 
         updateU<<<nX, nY>>>(cells, u1, 1, s, 10.0, nX, nY, delta_t);
@@ -229,12 +282,10 @@ int main (int argc, char** argv){
         cudaDeviceSynchronize();
 
         updateV<<<nX, nY>>>(cells, u1, u2, u3, cap, v1, 4, s, c1, m1, m2, nX, nY, delta_t);
-        updateV<<<nX, nY>>>(cells, u1, u2, u3, cap, v2, 5, s, c2, m2, m2, nX, nY, delta_t);
+        updateV<<<nX, nY>>>(cells, u1, u2, u3, cap, v2, 5, s, c2, m1, m2, nX, nY, delta_t);
         cudaDeviceSynchronize();
 
         if(gui){
-		    SDL_SetRenderDrawColor(renderer1, 0, 0, 0, 255);
-	    	SDL_RenderClear(renderer1);
 	        while( SDL_PollEvent( &e1 ) != 0 ){
 	            switch(e1.type){
                     case SDL_QUIT:
@@ -242,26 +293,6 @@ int main (int argc, char** argv){
                         break;
                 }
             }
-	        int x = 0, y = 0;
-		    for(int i = 0; i < cellIndx; i++){
-		    	if(x < (nX -1)){
-		    		x++;
-		    	}
-		    	else{
-		    		x = 0;
-		    		y++;
-		    	}
-                SDL_SetRenderDrawColor(
-                    renderer1, 
-                    (u1[i] + v1[i]) / MAX * 255, 
-                    (u2[i] + (v1[i] + v2[i]) * 0.5) / MAX * 255, 
-                    (u3[i] + v2[i]) / MAX * 255, 
-                    255
-                );
-                SDL_RenderDrawPoint(renderer1, x * zoom, y * zoom);
-
-		    }
-		    SDL_RenderPresent(renderer1);
         }
 	}
 

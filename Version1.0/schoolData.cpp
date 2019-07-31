@@ -3,6 +3,7 @@
 using namespace std;
 
 struct School{
+	int id;
 	float x, y;
 	int capacity, type;
 };
