@@ -48,7 +48,7 @@ def generate_dots(array):
 	return dots
 
 def average_difference(m1, m2):
-	return np.mean(np.square(m2 - m1))
+	return np.mean(np.sqrt(np.square(m2 - m1)))
 
 
 
@@ -132,7 +132,7 @@ pp.savefig("cambio.png", dpi=300)
 if(bool(int(sys.argv[1]))):
 	pp.show()
 
-pp.clf()
+#pp.clf()
 
 
 
@@ -233,6 +233,7 @@ df.to_csv("final.csv", index=False)
 dataframe = pd.DataFrame({"iterations": iterations, "m1": red_mat_differences, "m2": blue_mat_differences})
 dataframe.to_csv("average_difference.csv", index=False)
 
+sb.set()
 pp.figure(figsize=(16,9))
 
 #pp.xscale("log")
@@ -243,9 +244,10 @@ pp.plot(iterations, np.sqrt(blue_mat_differences), linewidth=2, label="Alumnos v
 pp.legend()
 pp.xlabel("Iteraciones")
 pp.ylabel("Diferencia de matricula promedio")
+pp.savefig("diferencia.pdf", dpi=300)
+pp.savefig("diferencia.png", dpi=300)
+
 if(bool(int(sys.argv[1]))):
 	pp.show()
 
-pp.savefig("diferencia.pdf", dpi=300)
-pp.savefig("diferencia.png", dpi=300)
 
