@@ -246,7 +246,7 @@ int main (int argc, char** argv){
             }
         }
     }
-    int max_density = 10000;
+    int max_density = 1000;
     int index = 0;
 
     int translate = 0;
@@ -255,7 +255,15 @@ int main (int argc, char** argv){
             translate = index - dimX * (nY - dimY - 200);
             if(translate < 0){index++; continue;}
             v1[translate - 100] = density_center[x] * density_center[1024 - y] * max_density;
-            v2[translate - 1024 * 200] = density_x[x] * density_y[1024 - y] * max_density;
+            v2[translate] = density_x[x] * density_y[1024 - y] * max_density;
+            
+            if(v2[translate - 1024 * 100 - 600] < 200){
+                v2[translate - 1024 * 100 - 600] = density_x[x] * density_y[1024 - y] * max_density;
+            }
+            if(v2[translate - 1024 * 400 + 100] < 200){
+                v2[translate - 1024 * 400 + 100] = density_x[x] * density_y[1024 - y] * max_density;
+            }
+                
             index++;
         }
     }

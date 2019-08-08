@@ -1,6 +1,7 @@
 import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 
+import sys
 import pygame as pgm
 import numpy as np
 import ctypes as ct
@@ -112,12 +113,12 @@ m2_differences = [average_difference(blue_iterations[i], blue_iterations[i + 1])
 num_iterations = len(red_iterations) * 1000
 
 iterations = list(range(1000, num_iterations, 1000))
-sb.set(style="darkgrid")
+sb.set()
 
 #pp.xscale("log")
 pp.figure(figsize=(16,9))
-pp.yscale("log")
-pp.xticks(np.arange(1000, num_iterations + 1000, 1000), rotation='vertical')
+#pp.yscale("log")
+#pp.xticks(np.arange(1000, num_iterations + 1000, 1000), rotation='vertical')
 pp.grid(linestyle='-')
 pp.plot(iterations, m1_differences, linewidth=2, label="Alumnos no vulnerables", color="red")
 pp.plot(iterations, m2_differences, linewidth=2, label="Alumnos vulnerables", color="blue")
@@ -127,8 +128,11 @@ pp.ylabel("Diferencia de densidad promedio")
 
 pp.savefig("cambio.pdf", dpi=300)
 pp.savefig("cambio.png", dpi=300)
+
+if(bool(int(sys.argv[1]))):
+	pp.show()
+
 pp.clf()
-#pp.show()
 
 
 
@@ -195,8 +199,8 @@ for iteration in blue_iterations:
 
 
 iterations = list(range(1000, num_iterations + 1000, 1000))
-pp.xticks(np.arange(1000, num_iterations + 1000, 1000), rotation='vertical')
-pp.grid(linestyle='-')
+#pp.xticks(np.arange(1000, num_iterations + 1000, 1000), rotation='vertical')
+#pp.grid(linestyle='-')
 
 
 
@@ -232,61 +236,16 @@ dataframe.to_csv("average_difference.csv", index=False)
 pp.figure(figsize=(16,9))
 
 #pp.xscale("log")
-pp.yscale("log")
+#pp.yscale("log")
 
-pp.plot(iterations, np.sqrt(np.array(red_mat_differences)), linewidth=2, label="Alumnos no vulnerables", color="red")
-pp.plot(iterations, np.sqrt(np.array(blue_mat_differences)), linewidth=2, label="Alumnos vulnerables", color="blue")
+pp.plot(iterations, np.sqrt(red_mat_differences), linewidth=2, label="Alumnos no vulnerables", color="red")
+pp.plot(iterations, np.sqrt(blue_mat_differences), linewidth=2, label="Alumnos vulnerables", color="blue")
 pp.legend()
 pp.xlabel("Iteraciones")
 pp.ylabel("Diferencia de matricula promedio")
-#pp.show()
+if(bool(int(sys.argv[1]))):
+	pp.show()
+
 pp.savefig("diferencia.pdf", dpi=300)
 pp.savefig("diferencia.png", dpi=300)
 
-"""
-red_dots = [generate_dots(i) for i in red_iterations]
-blue_dots = [generate_dots(i) for i in blue_iterations]
-
-blue_max_num = max([max(i) for i in blue_iterations])
-blue_min_num = min([min(i) for i in blue_iterations])
-
-
-red_max_num = max([max(i) for i in red_iterations])
-red_min_num = min([min(i) for i in red_iterations])
-
-on = FalseW
-fps = pgm.time.Clock()
-x_res, y_res = 1024, 1024
-scr = pgm.display.set_mode([x_res, y_res])
-
-while on:
-
-	scr.fill((0, 0, 0))
-	for e in pgm.event.get():
-		if(e.type == pgm.QUIT):
-			on = False
-	for frame in red_dots:
-		for i in frame:
-			pgm.draw.circle(
-				scr, 
-				np.array((250, 0, 0)), 
-				(i[1], i[2]),
-				int(10 * ((i[0] - red_min_num) / (red_max_num - red_min_num))) + 1,
-				1
-			)
-			pgm.display.update()
-
-	for frame in blue_dots:
-		for i in frame:
-			pgm.draw.circle(
-				scr, 
-				np.array((0, 0, 255)), 
-				(i[1], i[2]),
-				int(10 * ((i[0] - blue_min_num) / (blue_max_num - blue_min_num))) + 1,
-				1
-			)
-			pgm.display.update()
-
-		
-	fps.tick(60)
-"""
