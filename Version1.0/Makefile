@@ -1,10 +1,9 @@
 OBJS = main.cu
 CC = nvcc
 
-#COMPILER_FLAGS = -w -std=c++0x
-
+COMPILER_FLAGS = -w
 INCLUDE_FLAGS = -I/src
-LINKER_FLAGS = -lSDL2 -lSDL2main
+LINKER_FLAGS = -lSDL2 -lSDL2main -lSDL2_image
 
 OBJ_NAME = exec
 

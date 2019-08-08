@@ -13,6 +13,7 @@ from pandas.io.json import json_normalize
 from scipy.spatial import Voronoi, voronoi_plot_2d
 from sklearn.preprocessing import MinMaxScaler, normalize
 import matplotlib.pyplot as pp
+import seaborn as sb
 
 
 min_coordinates = [-38.705326, -72.668784]
@@ -46,7 +47,7 @@ def generate_dots(array):
 	return dots
 
 def average_difference(m1, m2):
-	return np.mean(np.sqrt(np.square(m2 - m1)))
+	return np.mean(np.square(m2 - m1))
 
 
 
@@ -59,7 +60,19 @@ json_data =	rq.get(
 ).json()
 
 json_data = list(
-	[i for i in json_data if i["RURAL_RBD"] == 0]
+	[
+		i for i in json_data if i["RURAL_RBD"] == 0 and 
+		i["NOM_RBD"] not in [
+			"ESCUELA EPU NEWEN", 
+			"LICEO TECNICO PROF. CENTENARIO",
+			"LICEO CUMBRES DE LABRANZA",
+			"ESCUELA LABRANZA",
+			"COLEGIO LOS ROBLES",
+			"SUN FLOWER SCHOOL",
+			"ESCUELA PARTICULAR ARAUCANIA",
+			"ESCUELA BASICA PARTICULAR EMPRENDER"
+		]
+	]
 )
 
 points = []
@@ -68,47 +81,15 @@ ids = file_to_array("school_ids.bin", "int32")
 
 non_zeros = np.nonzero(ids)[0]
 
-for school in json_data:
-	utmCoords = utm.from_latlon(school["LATITUD"], school["LONGITUD"])
-	points.append(
-		[utmCoords[0], utmCoords[1]]
-	)
-	school["UTM"] = [utmCoords[0], utmCoords[1]]
 
 school_dataframe = pd.DataFrame.from_records(json_data)
 students = json_normalize(
 	data = json_data
 )
 
-points = list(school_dataframe["UTM"])
-min_coordinates = utm.from_latlon(min_coordinates[0], min_coordinates[1])
-max_coordinates = utm.from_latlon(max_coordinates[0], max_coordinates[1])
-points.append([min_coordinates[0], min_coordinates[1]])
-points.append([max_coordinates[0], max_coordinates[1]])
-
-scaler = MinMaxScaler()
-scaler.fit(points)
-
-points = scaler.transform(points)
-points = points[:-2]
-
-
-points = points * 1024
-points = points.astype(int)
-
-normalized_dataframe = pd.DataFrame(points, columns=["normalized_x", "normalized_y"], dtype=int)
-school_dataframe = pd.concat([school_dataframe, normalized_dataframe], axis=1)
 school_dataframe = pd.concat([school_dataframe, students], axis=1)
+school_dataframe = school_dataframe.loc[:,~school_dataframe.columns.duplicated()]
 
-
-
-school_colors = {
-	"Municipal": [255, 0, 0],
-	"Particular Subvencionado": [0, 255, 0],
-	"Particular Pagado": [0, 0, 255]
-}
-
-n = 1024 * 1024
 file_list = os.listdir("results")
 
 file_list = sorted(file_list, key=lambda x: int(x.split("_")[1].split(".")[0]))
@@ -128,9 +109,14 @@ total_iterations = len(red_iterations)
 m1_differences = [average_difference(red_iterations[i], red_iterations[i + 1]) for i in range(total_iterations - 1)]
 m2_differences = [average_difference(blue_iterations[i], blue_iterations[i + 1]) for i in range(total_iterations - 1)]
 
-num_iterations = 10000
+num_iterations = len(red_iterations) * 1000
 
 iterations = list(range(1000, num_iterations, 1000))
+sb.set(style="darkgrid")
+
+#pp.xscale("log")
+pp.figure(figsize=(16,9))
+pp.yscale("log")
 pp.xticks(np.arange(1000, num_iterations + 1000, 1000), rotation='vertical')
 pp.grid(linestyle='-')
 pp.plot(iterations, m1_differences, linewidth=2, label="Alumnos no vulnerables", color="red")
@@ -138,8 +124,11 @@ pp.plot(iterations, m2_differences, linewidth=2, label="Alumnos vulnerables", co
 pp.legend()
 pp.xlabel("Iteraciones")
 pp.ylabel("Diferencia de densidad promedio")
-#"""
-pp.show()
+
+pp.savefig("cambio.pdf", dpi=300)
+pp.savefig("cambio.png", dpi=300)
+pp.clf()
+#pp.show()
 
 
 
@@ -150,7 +139,8 @@ pp.show()
 red_mat_differences = []
 cont = 0
 
-school_dataframe["VULNERABLES"] = 0
+school_dataframe["ALUMNOS.VULNERABLES"] = school_dataframe["ALUMNOS.TOTAL"] - \
+										  school_dataframe["ALUMNOS.NO_VULNERABLES"]  
 school_dataframe["MAT_VULNERABLES"] = 0
 school_dataframe["MAT_VULNERABLES"] = school_dataframe["MAT_VULNERABLES"].astype(int)
 school_dataframe["MAT_NO_VULNERABLES"] = 0
@@ -158,6 +148,7 @@ school_dataframe["MAT_NO_VULNERABLES"] = school_dataframe["MAT_NO_VULNERABLES"].
 school_dataframe["RBD"] = school_dataframe["RBD"].astype(int)
 no_vulnerables = []
 vulnerables = []
+total = []
 
 
 school_dataframe = school_dataframe.loc[:,~school_dataframe.columns.duplicated()]
@@ -165,24 +156,22 @@ for iteration in red_iterations:
 	diferencias = []
 	cont += 1
 	for i in non_zeros:
-		print(ids[i])
 		row_index = school_dataframe.index[school_dataframe["RBD"] == ids[i]]
 		row = school_dataframe.iloc[row_index]
+
 		diferencias.append(
 			(
-				int(row["ALUMNOS.NO_VULNERABLES"]) - int(iteration[i] / 1000)  
+				int(row["ALUMNOS.NO_VULNERABLES"]) - 
+				int(iteration[i] / 1000)  
 			) ** 2
 		)
-		if(cont == len(red_iterations) -1):
+		if(cont == len(red_iterations)):
 			school_dataframe.at[row_index, 'MAT_NO_VULNERABLES'] = int(iteration[i] / 1000)
-
 			no_vulnerables.append(int(iteration[i] / 1000))
 
-
-	average = np.average(np.array(diferencias, dtype=np.float32))
+	average = np.mean(np.array(diferencias, dtype=np.float32))
 	red_mat_differences.append(average)
 
-print(len(diferencias), len(non_zeros))
 blue_mat_differences = []
 cont = 0
 
@@ -194,40 +183,44 @@ for iteration in blue_iterations:
 		row = school_dataframe.iloc[row_index] 
 		diferencias.append(
 			(
-				int(row["ALUMNOS.TOTAL"]) -
-				int(row["ALUMNOS.NO_VULNERABLES"]) - 
+				int(row["ALUMNOS.VULNERABLES"]) -
 				int(iteration[i] / 1000)  
 			) ** 2
 		)
-		if(cont == len(blue_iterations) -1):
+		if(cont == len(blue_iterations)):
 			school_dataframe.at[row_index, 'MAT_VULNERABLES'] = int(iteration[i] / 1000)
 			vulnerables.append(int(iteration[i] / 1000))
-	average = np.average(np.array(diferencias))
+	average = np.mean(np.array(diferencias))
 	blue_mat_differences.append(average)
 
 
 iterations = list(range(1000, num_iterations + 1000, 1000))
 pp.xticks(np.arange(1000, num_iterations + 1000, 1000), rotation='vertical')
 pp.grid(linestyle='-')
-pp.plot(iterations, np.sqrt(np.array(red_mat_differences)), linewidth=2, label="Alumnos no vulnerables", color="red")
-pp.plot(iterations, np.sqrt(np.array(blue_mat_differences)), linewidth=2, label="Alumnos vulnerables", color="blue")
-pp.legend()
-pp.xlabel("Iteraciones")
-pp.ylabel("Diferencia de matricula promedio")
-pp.show()
 
+
+
+school_dataframe["MAT_TOTAL"] = school_dataframe["MAT_NO_VULNERABLES"] + school_dataframe["MAT_VULNERABLES"]
+school_dataframe["DIFERENCIA_TOTAL"] = school_dataframe["ALUMNOS.TOTAL"] - school_dataframe["MAT_TOTAL"]
+school_dataframe["DIFERENCIA_VULNERABLES"] = school_dataframe["ALUMNOS.VULNERABLES"] - school_dataframe["MAT_VULNERABLES"]
+school_dataframe["DIFERENCIA_NO_VULNERABLES"] = school_dataframe["ALUMNOS.NO_VULNERABLES"] - school_dataframe["MAT_NO_VULNERABLES"]
+school_dataframe["MAT_TOTAL"] = school_dataframe["MAT_TOTAL"].round()
+school_dataframe["MAT_TOTAL"] = school_dataframe["MAT_TOTAL"].astype(int)
 
 df = school_dataframe[[
 	"NOM_RBD", 
 	"NOM_DEPE", 
 	"ALUMNOS.NO_VULNERABLES", 
-	"VULNERABLES", 
+	"ALUMNOS.VULNERABLES", 
 	"MAT_NO_VULNERABLES", 
 	"MAT_VULNERABLES",
-	"ALUMNOS.TOTAL"
+	"DIFERENCIA_VULNERABLES",
+	"DIFERENCIA_NO_VULNERABLES",
+	"DIFERENCIA_TOTAL",
+	"ALUMNOS.TOTAL",
+	"MAT_TOTAL"
 ]]
-df["VULNERABLES"] = df["ALUMNOS.TOTAL"] - df["ALUMNOS.NO_VULNERABLES"]
-df["MAT_TOTAL"]   = df["MAT_NO_VULNERABLES"] + df["MAT_VULNERABLES"]
+
 
 #df["MAT_VULNERABLES"] = vulnerables
 #df["MAT_NO_VULNERABLES"] = no_vulnerables
@@ -235,6 +228,20 @@ df["MAT_TOTAL"]   = df["MAT_NO_VULNERABLES"] + df["MAT_VULNERABLES"]
 df.to_csv("final.csv", index=False)
 dataframe = pd.DataFrame({"iterations": iterations, "m1": red_mat_differences, "m2": blue_mat_differences})
 dataframe.to_csv("average_difference.csv", index=False)
+
+pp.figure(figsize=(16,9))
+
+#pp.xscale("log")
+pp.yscale("log")
+
+pp.plot(iterations, np.sqrt(np.array(red_mat_differences)), linewidth=2, label="Alumnos no vulnerables", color="red")
+pp.plot(iterations, np.sqrt(np.array(blue_mat_differences)), linewidth=2, label="Alumnos vulnerables", color="blue")
+pp.legend()
+pp.xlabel("Iteraciones")
+pp.ylabel("Diferencia de matricula promedio")
+#pp.show()
+pp.savefig("diferencia.pdf", dpi=300)
+pp.savefig("diferencia.png", dpi=300)
 
 """
 red_dots = [generate_dots(i) for i in red_iterations]

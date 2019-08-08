@@ -15,7 +15,7 @@ __global__ void updateV(
         float dTime
     ){
     int index = blockIdx.x * blockDim.x + threadIdx.x;
-    int cT = 1;
+    int cT = 10;
     float rightU1, bottomU1, leftU1, topU1;
     float rightU2, bottomU2, leftU2, topU2;
     float rightU3, bottomU3, leftU3, topU3;
