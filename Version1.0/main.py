@@ -18,7 +18,6 @@ from schoolData import *
 
 import smopy
 
-import pygame_plot
 import struct 
 import pandas as pd
 import json
