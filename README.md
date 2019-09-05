@@ -30,11 +30,12 @@ sudo add-apt-repository ppa:graphics-drivers/ppa
 sudo apt update
 sudo ubuntu-drivers autoinstall
 
-# Reboot
+Reboot
 
 sudo apt install nvidia-cuda-toolkit gcc-6
 
-# Test with:
+
+Test with:
 nvcc --version
 
 to compile just run make on Version1.0 folder
